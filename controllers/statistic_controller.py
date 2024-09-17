@@ -40,15 +40,17 @@ def generate_sample_average(tt=stat.tally,type=str,n_groups=tuple):
     # normalizzo sull'estensione del gruppo energetico e sul volume del detector
     for ii in range(len(diffE)):
         out1[ii] *= 1/diffE[ii]
-        out2[ii] *= 1/diffE[ii]**2
+        out2[ii] *= 1/diffE[ii]
     if len(tt.spacerange)>1:
-        for ii in out1:
-            for jj in range(len(ii)):
+        for ii in range(len(out1)):
+            for jj in range(len(out1[ii])):
                 if GV.GEOMETRY_TYPE == 'sphere':
-                    ii[jj] *= 1/(4/3*pi*(tt.spacerange[jj+1]**2-tt.spacerange[jj]**2))
+                    out1[ii][jj] *= 1/(4/3*pi*(tt.spacerange[jj+1]**2-tt.spacerange[jj]**2))
+                    out2[ii][jj] *= 1/(4/3*pi*(tt.spacerange[jj+1]**2-tt.spacerange[jj]**2))
                 else:
-                    ii[jj] *= 1/(tt.spacerange[jj+1]-tt.spacerange[jj])
-    var = out2 - out1**2
+                    out1[ii][jj] *= 1/(tt.spacerange[jj+1]-tt.spacerange[jj])
+                    out2[ii][jj] *= 1/(tt.spacerange[jj+1]-tt.spacerange[jj])
+    var = np.abs(out2 - out1**2)
     std = np.sqrt(var/tt.iter)
     return (out1,std)
 
@@ -77,6 +79,7 @@ def splitting(pp=phy.particle):
                 for ii in range(int(N)):
                     GV.particle_squeue.append(phy.particle(pp.position,pp.direction,pp.energy,pp.weight/(int(N)+1)))
                 pp.weight *= 1/(int(N)+1)
-        
+
+
 
         

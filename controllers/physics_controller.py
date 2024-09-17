@@ -64,10 +64,15 @@ def sample_free_flight(nn=phy.particle, mat=geo.domain):
         index = mat_index-region+1
     ll = (eta-b_minus1)/mat.materials[index].macro_xs_total(nn.energy)
     new_rr = rr[index-1]+ll
-    add_x = new_rr*np.sin(nn.direction.teta)*np.cos(nn.direction.phi)
-    add_y = new_rr*np.sin(nn.direction.teta)*np.sin(nn.direction.phi)
-    add_z = new_rr*np.cos(nn.direction.teta)
-    return geo_c.sumpos(nn.position,geo.point(add_x,add_y,add_z))
+    if GV.PARTICLE_TYPE == 'neutron':
+        add_x = new_rr*np.sin(nn.direction.teta)*np.cos(nn.direction.phi)
+        add_y = new_rr*np.sin(nn.direction.teta)*np.sin(nn.direction.phi)
+        add_z = new_rr*np.cos(nn.direction.teta)
+    else:
+        add_x = new_rr*np.sin(-nn.direction.teta)*np.cos(-nn.direction.phi)
+        add_y = new_rr*np.sin(-nn.direction.teta)*np.sin(-nn.direction.phi)
+        add_z = new_rr*np.cos(-nn.direction.teta)
+    return geo_c.sumpos(nn.position,geo.point((add_x,add_y,add_z)))
 
 def sample_energy_stepf(nn=phy.particle,mat=geo.domain):
     mat_index = mat_c.find_position(nn.position,mat)

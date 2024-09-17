@@ -7,10 +7,10 @@ import models.globalvariables as GV
 import models.material_model as mat
 
 class point:
-    def __init__(self, ics=float, ips=float, zeta=float):
-        self.x = ics
-        self.y = ips
-        self.z = zeta
+    def __init__(self, pos=tuple):
+        self.x = pos[0]
+        self.y = pos[1]
+        self.z = pos[2]
     @property
     def distance(self):
         if GV.GEOMETRY_TYPE == 'sphere':
