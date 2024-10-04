@@ -1,5 +1,6 @@
 # geometry controller
 import numpy as np
+import numpy.random as rnd
 from math import pi
 import models.globalvariables as GV
 import models.geometry_models as geo
@@ -47,3 +48,15 @@ def is_outofbound(pp=phy.particle,type=str):
             return True
         else:
             return False
+
+def get_point_from_surface(rr=float):
+    if GV.GEOMETRY_TYPE == 'sphere':
+        dir = geo.direction.get_rnd_direction()
+        xx = rr*np.sin(dir.teta)*np.cos(dir.phi)
+        yy = rr*np.sin(dir.teta)*np.sin(dir.phi)
+        zz = rr*np.cos(dir.phi)
+    else:
+        xx = 0
+        yy = 0
+        zz = rr
+    return geo.point((xx,yy,zz))

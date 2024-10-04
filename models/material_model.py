@@ -12,12 +12,13 @@ class isotope:
         self.micro_xs_scattering = scatt/1E24
         self.micro_xs_absorption = self.micro_xs_total-self.micro_xs_scattering
         if fiss is not None:
-            self.micro_xs_fission = fiss
-            self.neutron_emitted = nu
+            self.micro_xs_fission = fiss/1E24
+            self.nu = nu
+            self.fiss_check = True
         else:
             self.micro_xs_fission = np.zeros(len(energy))
-            self.fission_spectrum = np.zeros(len(energy))
             self.neutron_emitted = 0
+            self.fiss_check = False
         self.micro_xs_capture = self.micro_xs_absorption-self.micro_xs_fission
         self.atomic_density = dens
         self.energy = energy

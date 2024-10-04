@@ -10,20 +10,31 @@ import models.geometry_models as geo
 import models.globalvariables as GV
 import models.statistic_model as stat
 
-def generate_new_particle(ss=phy.source,ww=float):
+def generate_new_particle(ss=phy.source,ww=float,pp=None):
     new_energy = ss.get_energy()
-    new_position = ss.get_position()
+    if pp == None:
+        rr = ss.get_position()
+    else:
+        rr = pp
+    new_position = geo_c.get_point_from_surface(rr)
     new_dir = geo.direction.get_rnd_direction()
     out = phy.particle(new_position,new_dir,new_energy,ww)
     return out
 
-def choose_new_particle(ss=phy.source,ww=float,tt=stat.tally):
-    if len(GV.particle_squeue) == 0:
+def choose_new_particle(ss=phy.source,ww=float,tt=None):
+    if len(stat.particle_squeue) == 0:
         out = generate_new_particle(ss,ww)
-        tt.iter += 1
+        if tt != None:
+            tt.iter += 1
     else:
-        out = GV.particle_squeue.pop(0)
+        out = stat.particle_squeue.pop(0)
     return out
+
+def generate_population(ss=phy.source,ww=float):
+    indices = np.where(ss.spacedistribution==1)[0]
+    for ii in indices:
+        for jj in range(ss.n_generated[ii]):
+            stat.particle_squeue.append(generate_new_particle(ss,ww,ss.spacerange[ii]))
 
 def sample_free_flight(nn=phy.particle, mat=geo.domain):
     mat_index = mat_c.find_position(nn.position,mat)
@@ -100,3 +111,28 @@ def new_weight(nn=phy.particle, mat=geo.domain):
         SS = np.trapz(mat.materials[mat_index].macro_scattering[low_i:up_i]/mat.materials[mat_index].composition[is_index].energy[low_i:up_i],mat.materials[mat_index].composition[is_index].energy[low_i:up_i])
         new_weight *= 1/(1-alfa)/mat.materials[mat_index].macro_xs_scattering(nn.energy)*SS
     return new_weight
+
+def add_fissionsite(pp=geo.point,nn=float,ss=phy.source):
+        space_index = np.where(ss.spacerange>=pp.distance)[0][0]
+        ss.spacedistribution[space_index] = 1
+        rho = rnd.rand()
+        N = int(nn)
+        if rho < nn-N:
+            ss.n_generated[space_index] += N+1
+        else:
+            ss.n_generated[space_index] += N
+
+def implicit_fission(nn=phy.particle,mat=geo.domain,kk=float,ss=phy.source):
+    mat_index = mat_c.find_position(nn.position,mat)
+    is_index = mat_c.sample_fission_isotope(nn,mat.materials[mat_index])
+    if is_index == None:
+        kn = 0
+    else:
+        en_index = mat_c.find_energy_index(nn.energy,mat.materials[mat_index].composition[is_index].energy)
+        #SigmaF = mat.materials[mat_index].composition[is_index].micro_xs_fission[en_index]*mat.materials[mat_index].composition[is_index].atomic_density
+        SigmaF = mat.materials[mat_index].macro_xs_fission(nn.energy)
+        SigmaT = mat.materials[mat_index].macro_xs_total(nn.energy)
+        RR = nn.weight*(mat.materials[mat_index].composition[is_index].nu*SigmaF)/SigmaT/kk
+        kn = RR*kk/GV.Nstories
+        add_fissionsite(nn.position,RR,ss)
+    return kn

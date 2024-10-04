@@ -16,7 +16,7 @@ class point:
         if GV.GEOMETRY_TYPE == 'sphere':
             dd = np.sqrt(self.x**2 + self.y**2 + self.z**2)
         else:
-            dd = self.z
+            dd = abs(self.z)
         return dd
 
 class direction:

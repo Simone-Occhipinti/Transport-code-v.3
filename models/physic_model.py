@@ -20,27 +20,49 @@ class particle:
         self.eof = 1
 
 class source:
-    def __init__(self, points=list[geo.point],intensity=float, type=str, pdf=None, range=None, pdf_log=None):
+    def __init__(self,space_lim=tuple,space_n=int,initial_dist=list,intensity=float,type=str,pdf=None,range=None,pdf_log=None):
         self.intensity = intensity
         self.type = type
+        self.shannonentropy = []
         if pdf != None:
-            self.distribution = pdf
+            self.energydistribution = pdf
             if pdf_log == True:
-                self.range = np.logspace(np.log10(range[0]),np.log10(range[1]),len(pdf))
+                self.energyrange = np.logspace(np.log10(range[0]),np.log10(range[1]),len(pdf))
             else:
-                self.range = np.linspace(range[0],range[1],len(pdf))
-        self.position = points
+                self.energyrange = np.linspace(range[0],range[1],len(pdf))
+        self.spacerange = np.linspace(space_lim[0],space_lim[1],space_n)
+        self.spacedistribution = np.zeros(len(self.spacerange),dtype=int)
+        self.n_generated = np.zeros(len(self.spacerange),dtype=int)
+        for ii in initial_dist:
+            self.spacedistribution[ii] += 1
+            self.n_generated[ii] += int(GV.Nstories/len(initial_dist))
     def get_position(self):
-        if len(self.position)==1:
-            return self.position[0]
-        else:
-            rho = np.ceil(rnd.rand()*len(self.position))
-            return self.position[rho]
+        indices = np.where(self.spacedistribution == 1)[0]
+        rho = np.random.choice(indices)
+        return self.spacerange[rho]
     def get_energy(self):
         if self.type == 'watt':
-            return watt(0.988,2.249)
+            out = watt(0.988,2.249)
         else:
-            return rejection(self.distribution,self.range,1)
+            out = rejection(self.energydistribution,self.energyrange,1)
+        if out > GV.EMAX:
+            out = GV.EMAX
+        elif out < GV.EMIN:
+            out = GV.EMIN
+        return out
+    @property
+    def tot_generated(self):
+        return sum(self.n_generated)
+    
+    def s_entropy(self):
+        HH = 0
+        for ii in self.n_generated:
+            if ii > 0:
+                HH += -ii*np.log2(ii)
+        self.shannonentropy.append(HH)
+    def reset_source(self):
+        self.spacedistribution = np.zeros(len(self.spacerange),dtype=int)
+        self.n_generated = np.zeros(len(self.spacerange),dtype=int)
 
 def watt(aa, bb):
         kk = 1 + bb/(8*aa)
