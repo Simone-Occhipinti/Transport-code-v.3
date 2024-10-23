@@ -17,6 +17,10 @@ def generate_new_particle(ss=phy.source,ww=float,pp=None):
     else:
         rr = pp
     new_position = geo_c.get_point_from_surface(rr)
+    if new_position.distance > GV.LEnd:
+        new_position.x += -1E-4
+        new_position.y += -1E-4
+        new_position.z += -1E-4
     new_dir = geo.direction.get_rnd_direction()
     out = phy.particle(new_position,new_dir,new_energy,ww)
     return out
@@ -74,7 +78,7 @@ def sample_free_flight(nn=phy.particle, mat=geo.domain):
     else:
         index = mat_index-region+1
     ll = (eta-b_minus1)/mat.materials[index].macro_xs_total(nn.energy)
-    new_rr = rr[index-1]+ll
+    new_rr = ll+b_minus1
     if GV.PARTICLE_TYPE == 'neutron':
         add_x = new_rr*np.sin(nn.direction.teta)*np.cos(nn.direction.phi)
         add_y = new_rr*np.sin(nn.direction.teta)*np.sin(nn.direction.phi)

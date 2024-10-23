@@ -54,7 +54,7 @@ def get_point_from_surface(rr=float):
         dir = geo.direction.get_rnd_direction()
         xx = rr*np.sin(dir.teta)*np.cos(dir.phi)
         yy = rr*np.sin(dir.teta)*np.sin(dir.phi)
-        zz = rr*np.cos(dir.phi)
+        zz = rr*np.cos(dir.teta)
     else:
         xx = 0
         yy = 0
