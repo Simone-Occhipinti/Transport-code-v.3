@@ -53,6 +53,10 @@ class domain:
         # generazione della distribuzione dei materiali
         self.materials = []
         self.materialposition = []
-        for ii in range(len(mate)):
-            self.materials.append(mate[ii][0])
-            self.materialposition.append((mate[ii][1],mate[ii][2]))
+        if len(space_ex)>1:
+            for ii in range(len(mate)):
+                self.materials.append(mate[ii][0])
+                self.materialposition.append((mate[ii][1],mate[ii][2]))
+        else:
+            self.materials.append(mate[0][0])
+            self.materialposition.append((0,float('inf')))

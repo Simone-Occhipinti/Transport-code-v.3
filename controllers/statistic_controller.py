@@ -24,8 +24,6 @@ def wellford(tt=stat.tally, pp=phy.particle, mat=geo.domain):
 def normalization(tt=stat.tally):
     # normalizzo sull'estensione del gruppo energetico e sul volume del detector
     diffE = np.diff(np.array([GV.EMIN]+list(GV.Groups)))/GV.EREF
-    tt.mean
-    tt.variance
     for ii in range(len(diffE)):
         tt.mean[ii] *= 1/diffE[ii]
         tt.variance[ii] *= 1/diffE[ii]**2

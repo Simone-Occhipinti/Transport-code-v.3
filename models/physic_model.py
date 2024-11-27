@@ -30,8 +30,12 @@ class source:
                 self.energyrange = np.logspace(np.log10(range[0]),np.log10(range[1]),len(pdf))
             else:
                 self.energyrange = np.linspace(range[0],range[1],len(pdf))
-        self.spacerange = np.linspace(space_lim[0],space_lim[1],space_n)
-        self.spacedistribution = np.zeros(len(self.spacerange),dtype=int)
+        if len(space_lim)>1:
+            self.spacerange = np.linspace(space_lim[0],space_lim[1],space_n)
+            self.spacedistribution = np.zeros(len(self.spacerange),dtype=int)
+        else:
+            self.spacerange = np.array([float('inf')])
+            self.spacedistribution = np.array([0])
         self.n_generated = np.zeros(len(self.spacerange),dtype=int)
         for ii in initial_dist:
             self.spacedistribution[ii] += 1
@@ -39,10 +43,16 @@ class source:
     def get_position(self):
         indices = np.where(self.spacedistribution == 1)[0]
         rho = np.random.choice(indices)
-        return self.spacerange[rho]
+        if len(self.spacerange)>1:
+            out = self.spacerange[rho]
+        else:
+            out = 0
+        return out
     def get_energy(self):
         if self.type == 'watt':
             out = watt(0.988,2.249)
+        elif self.type == 'fixed':
+            out = GV.EREF
         else:
             out = rejection(self.energydistribution,self.energyrange,1)
         if out > GV.EMAX:
@@ -60,6 +70,7 @@ class source:
             if ii > 0:
                 HH += -ii*np.log2(ii)
         self.shannonentropy.append(HH)
+        
     def reset_source(self):
         self.spacedistribution = np.zeros(len(self.spacerange),dtype=int)
         self.n_generated = np.zeros(len(self.spacerange),dtype=int)
