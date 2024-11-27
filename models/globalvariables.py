@@ -11,7 +11,7 @@ EMIN = 1E-5
 EMAX = 2E7
 EE = (EMIN,EMAX)
 EREF = 2E6
-Nstories = 2E4
+Nstories = 1E6
 SOURCE_POSITION = [0]
 L0 = 0
 LEnd = 8.7407
@@ -20,7 +20,7 @@ WW = 6
 Wmin = 1/WW
 Wmax = WW
 #Groups = [0.025,EMAX]
-Groups = np.logspace(np.log10(EMIN),np.log10(EMAX),int(1E4))
+Groups = np.logspace(np.log10(EMIN),np.log10(EMAX),int(1E3))
 
 # only for eigenvalue calculationd
 Nskip = 1E3
