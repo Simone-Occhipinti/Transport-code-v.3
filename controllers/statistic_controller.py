@@ -9,14 +9,17 @@ import controllers.physics_controller as phy_c
 import controllers.material_controller as mat_c
 import numpy.random as rnd
 
-def wellford(tt=stat.tally, pp=phy.particle, mat=geo.domain):
+def wellford(tt=stat.tally, pp=phy.particle, mat=geo.domain, placzeck=None):
     if len(tt.spacerange) > 1:
         spaceindex = np.where(pp.position.distance <= tt.spacerange)[0][0]-1
     else:
         spaceindex = 0
     energyindex = np.where(pp.energy <= tt.energyrange)[0][0]
     mat_index = mat_c.find_position(pp.position,mat)
-    xx = pp.weight/mat.materials[mat_index].macro_xs_scattering(pp.energy)
+    if placzeck == None:
+        xx = pp.weight/mat.materials[mat_index].macro_xs_scattering(pp.energy)
+    else:
+        xx = pp.weight
     delta = xx - tt.mean[energyindex][spaceindex]
     tt.mean[energyindex][spaceindex] += delta/tt.iter
     tt.variance[energyindex][spaceindex] += delta*(xx - tt.mean[energyindex][spaceindex])
