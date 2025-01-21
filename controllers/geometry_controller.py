@@ -39,8 +39,11 @@ def distance_par2surf(pp=phy.particle,ll=float):
 
 def is_outofbound(pp=phy.particle,type=str):
     if type == 'space':
-        if pp.position.distance > GV.LEnd or pp.position.distance < GV.L0:
-            return True
+        if len(GV.LL)>1:
+            if pp.position.distance > GV.LEnd or pp.position.distance < GV.L0:
+                return True
+            else:
+                return False
         else:
             return False
     else:

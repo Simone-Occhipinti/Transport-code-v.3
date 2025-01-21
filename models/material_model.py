@@ -1,6 +1,5 @@
 # material model
 import numpy as np
-import scipy as sp
 from math import pi
 
 class isotope:

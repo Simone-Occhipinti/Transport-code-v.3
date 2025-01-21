@@ -1,7 +1,7 @@
 # Controller Physics
 import numpy as np
 import numpy.random as rnd
-from math import pi
+
 import controllers.geometry_controller as geo_c
 import controllers.material_controller as mat_c
 import models.physic_model as phy
@@ -25,11 +25,9 @@ def generate_new_particle(ss=phy.source,ww=float,pp=None):
     out = phy.particle(new_position,new_dir,new_energy,ww)
     return out
 
-def choose_new_particle(ss=phy.source,ww=float,tt=None):
+def choose_new_particle(ss=phy.source,ww=float):
     if len(stat.particle_squeue) == 0:
         out = generate_new_particle(ss,ww)
-        if tt != None:
-            tt.iter += 1
     else:
         out = stat.particle_squeue.pop(0)
     return out
@@ -98,10 +96,11 @@ def sample_energy_stepf(nn=phy.particle,mat=geo.domain):
     else:
         low_i = mat_c.find_energy_index(nn.energy,mat.materials[mat_index].composition[is_index].energy)
         up_i = mat_c.find_energy_index(nn.energy/alfa,mat.materials[mat_index].composition[is_index].energy)
-        SS = np.trapz(mat.materials[mat_index].macro_scattering[low_i:up_i]/mat.materials[mat_index].composition[is_index].energy[low_i:up_i],mat.materials[mat_index].composition[is_index].energy[low_i:up_i])
-        exponent = rnd.rand()*SS/mat.materials[mat_index].macro_xs_scattering(nn.energy)
-        result_log = np.log(nn.energy) + exponent
-        new_energy = np.clip(np.exp(result_log),GV.EMIN,GV.EMAX)
+        ee = mat.materials[mat_index].composition[is_index].energy[low_i:up_i]
+        sigma = mat.materials[mat_index].macro_scattering[low_i:up_i]
+        SS = np.trapz(sigma/ee,ee)
+        ff = lambda eout: mat.materials[mat_index].macro_xs_scattering(eout)/SS/eout
+        new_energy = stat.rejection(ff,ee)
     return new_energy
 
 def new_weight(nn=phy.particle, mat=geo.domain):
