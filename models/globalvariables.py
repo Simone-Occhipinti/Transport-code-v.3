@@ -23,7 +23,7 @@ WW = 6
 Wmin = 1/WW
 Wmax = WW
 #Groups = [6.25E-1,5.53E3,8.21E5,1E6,EMAX]
-Groups = np.logspace(np.log10(EMIN),np.log10(EMAX),int(1E3))
+Groups = np.logspace(np.log10(EMIN),np.log10(EMAX),int(5E1))
 
 # only for eigenvalue calculationd
 Nskip = 1E3
