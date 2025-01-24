@@ -43,7 +43,6 @@ def adj_placzek1(aa,fsigma):
     for ii in xx:
         sigma.append(fsigma(ii))
     sigma = np.array(sigma)
-    sigma = fsigma(E0)
     #yy = (1/(1-alfa))*(xx/E0)**(1/(1-alfa)) 
     yy = (1/(E0*sigma*(1-alfa)))*(xx/E0)**(alfa/(1-alfa))
     return [xx,yy]

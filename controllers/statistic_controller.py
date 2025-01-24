@@ -35,22 +35,24 @@ def normalization(tt=stat.tally):
     diffE = np.diff(tt.energyrange)
     for ii in range(len(diffE)):
         tt.mean[ii] *= 1/diffE[ii]
-        tt.variance[ii] *= 1/(diffE[ii]**2)
+        #tt.variance[ii] *= 1/(diffE[ii]**2)
     if len(tt.spacerange)>1:
         for ii in range(len(tt.mean)):
             for jj in range(len(tt.mean[ii])):
                 if GV.GEOMETRY_TYPE == 'sphere':
                     tt.mean[ii][jj] *= 1/(4/3*pi*(tt.spacerange[jj+1]**2-tt.spacerange[jj]**2))
-                    tt.variance[ii][jj] *= 1/(4/3*pi*(tt.spacerange[jj+1]**2-tt.spacerange[jj]**2))**2
+                    #tt.variance[ii][jj] *= 1/(4/3*pi*(tt.spacerange[jj+1]**2-tt.spacerange[jj]**2))**2
                 else:
                     tt.mean[ii][jj] *= 1/(tt.spacerange[jj+1]-tt.spacerange[jj])
-                    tt.variance[ii][jj] *= 1/(tt.spacerange[jj+1]-tt.spacerange[jj])**2
+                    #tt.variance[ii][jj] *= 1/(tt.spacerange[jj+1]-tt.spacerange[jj])**2
 
 def russian_roulette(pp=phy.particle):
+    dd = 6
     if pp.weight <= GV.Wmin:
         rho = rnd.rand()
-        if rho <= GV.Wmin:
-            pp.weight *= GV.WW
+        if rho <= 1/dd:
+            pp.weight *= dd
+            #pp.weight = 1
         else:
             pp.eof = 0
         

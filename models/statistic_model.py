@@ -37,6 +37,10 @@ class tally:
     def sigma(self):
         #return np.sqrt(self.variance/(self.iter-1))
         return np.sqrt(self.variance/self.iter)
+    @property
+    def RSD(self):
+        aa = self.sigma
+        return aa/self.mean
 
 def rejection(ff, vett=np.array):
     yy = []
