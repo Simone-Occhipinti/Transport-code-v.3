@@ -1,3 +1,5 @@
+import sys
+
 import numpy as np
 import numpy.random as rnd
 import matplotlib.pyplot as plt
@@ -17,7 +19,8 @@ from controllers import material_controller as mat_c
 from controllers import statistic_controller as stat_c
 
 PL = 1
-LT = 1
+LT = -1
+particle_squeue = []
 
 # Base directory
 base_dir = 'cross_sections_Janis'
@@ -40,7 +43,7 @@ tally = stat_m.tally(GV.LL,200)
 
 while tally.iter <= GV.Nstories:
     # scelgo la particella da simulare
-    nn = phy_c.choose_new_particle(source,1.)
+    nn = phy_c.choose_new_particle(source,1.,particle_squeue)
     while nn.eof > 0:
         nn.position = phy_c.sample_free_flight(nn,domain)
         if geo_c.is_outofbound(nn,'space'):
@@ -57,12 +60,15 @@ while tally.iter <= GV.Nstories:
             else:
                 # russian roulette e splitting
                 stat_c.russian_roulette(nn)
-                stat_c.splitting(nn)
-    stat_c.wellford(tally)
-stat_c.normalization(tally)
+                stat_c.splitting(nn,particle_squeue)
+    stat_c.wellford(tally,particle_squeue)
+
+    if tally.iter % 100 == 0:  # Print every 100 iterations
+        print(f"Iteration: {tally.iter}")
 
 avg = tally.avg
 sigma = tally.RSD
+stat_c.normalization(tally)
 
 avg = avg.ravel()
 sigma = sigma.ravel()
@@ -79,18 +85,13 @@ else:
         plc = pcz.adj_placzek(12,domain.materials[0].macro_xs_scattering)
         plc[0] *= 1/GV.EREF
 
-plt.errorbar(xx, yy, yerr=sigma*yy, fmt='o', capsize=1)
-plt.plot(xx,yy, linewidth='4' ,label='MC')
-if PL > 0:
-    plt.plot(plc[0],plc[1],linewidth='4' ,label='Placzek')
-if LT > 0:
-    plt.xlabel('Letargy [-]')
-    plt.ylabel('$\Sigma*\Phi$ [-/cm3/s]')
-else:
-    plt.xlabel('E/E0 [-]')
-    plt.ylabel(r'$\Psi$ [-/cm2/s/eV]')
-plt.title('Direct slowing down problem 0D, N=1e5')
-plt.xlim(1,2)
+plt.errorbar(xx, yy, yerr=2*yy*sigma, fmt='o', capsize=10, label='MC')
+plt.plot(plc[0],plc[1],linewidth='2' ,label='Placzek')
+plt.xlabel('Normalized Energy [-]')
+plt.ylabel('$\Sigma*\Psi$ [-/cm3/s]')
+plt.title('Adjoint slowing-down case 1D, N=1e5')
+plt.xlim(1,2.5)
+plt.grid()
 plt.legend()
-output_file = "SD_placzek_direct.png"
+output_file = sys.argv[1]
 plt.savefig(output_file, dpi=300, bbox_inches='tight')

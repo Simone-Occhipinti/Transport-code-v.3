@@ -1,15 +1,17 @@
 # material controller
+
 import numpy as np
 from math import pi
 import numpy.random as rnd
 import models.material_model as mat
 import models.physic_model as phy
 import models.geometry_models as geo
+import models.globalvariables as GV
 import controllers.geometry_controller as geo_C
 
 def find_energy_index(pp=float,mat=np.array):
     if pp >= mat[-1]:
-        out = -1
+        out = len(mat)
     elif pp <= mat[0]:
         out = 0
     else:
@@ -20,7 +22,10 @@ def find_position(pp=geo.point,dom=geo.domain):
     vett = []
     for ii in dom.materialposition:
         vett.append(ii[1])
-    index = np.where(pp.distance <= np.array(vett))[0][0]
+    if pp.distance < GV.LEnd:
+        index = np.where(pp.distance < np.array(vett))[0][0]
+    else:
+        index = len(dom.materialposition)-1
     return index
 
 def sample_isotope_index(pp=phy.particle,mat=geo.domain):

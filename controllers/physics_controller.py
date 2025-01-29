@@ -25,18 +25,11 @@ def generate_new_particle(ss=phy.source,ww=float,pp=None):
     out = phy.particle(new_position,new_dir,new_energy,ww)
     return out
 
-def choose_new_particle(ss=phy.source,ww=float):
-    if len(stat.particle_squeue) == 0:
-        out = generate_new_particle(ss,ww)
-    else:
-        out = stat.particle_squeue.pop(0)
-    return out
-
-def generate_population(ss=phy.source,ww=float):
+def generate_population(ss=phy.source,ww=float,PS=list):
     indices = np.where(ss.spacedistribution==1)[0]
     for ii in indices:
         for jj in range(ss.n_generated[ii]):
-            stat.particle_squeue.append(generate_new_particle(ss,ww,ss.spacerange[ii]))
+            PS.append(generate_new_particle(ss,ww,ss.spaceref[ii]))
 
 def sample_free_flight(nn=phy.particle, mat=geo.domain):
     mat_index = mat_c.find_position(nn.position,mat)

@@ -38,33 +38,39 @@ def placzek(AA):
 
 def adj_placzek1(aa,fsigma):
     alfa = ((aa-1)/(aa+1))**2
-    xx = np.linspace(E0,E0/alfa,100)
+    xx = np.linspace(E0,E0/alfa,200)
     sigma = []
     for ii in xx:
         sigma.append(fsigma(ii))
     sigma = np.array(sigma)
+    #sigma = fsigma(E0)
+    #sigma = 1
     #yy = (1/(1-alfa))*(xx/E0)**(1/(1-alfa)) 
     yy = (1/(E0*sigma*(1-alfa)))*(xx/E0)**(alfa/(1-alfa))
     return [xx,yy]
 
 def adj_placzek2(aa,fsigma):
     alfa = ((aa-1)/(aa+1))**2
-    xx = np.linspace(E0/alfa,E0/(alfa**2),100)
+    xx = np.linspace(E0/alfa,E0/(alfa**2),200)
     sigma = []
     for ii in xx:
         sigma.append(fsigma(ii))
     sigma = np.array(sigma)
+    #sigma = fsigma(E0)
     #yy = (1/(1-alfa)**2)*((xx/E0)**(1/(1-alfa)))*(((1-alfa)*(1-alfa**(1/(1-alfa))))-((alfa**(1/(1-alfa)))*(np.log(alfa*xx/E0))))
+    #sigma = 1
     yy = (1/(E0*sigma*(1-alfa)**2))*((xx/E0)**(alfa/(1-alfa)))*(((1-alfa)*(1-alfa**(1/(1-alfa))))-((alfa**(1/(1-alfa)))*np.log(alfa*xx/E0)))
     return [xx,yy]
 
 def adj_placzek3(aa,fsigma):
     alfa = ((aa-1)/(aa+1))**2
-    xx = np.linspace(E0/alfa**2,E0/(alfa**3),100)
+    xx = np.linspace(E0/alfa**2,E0/(alfa**3),200)
     sigma = []
     for ii in xx:
         sigma.append(fsigma(ii))
     sigma = np.array(sigma)
+    #sigma = fsigma(E0)
+    #sigma = 1
     yy = (1/(E0*sigma*(1-alfa)**3))*((xx/E0)**(alfa/(1-alfa)))*((((1-alfa)**2)*(1-alfa**(1/(1-alfa))))-((1-alfa)*(alfa**(1/(1-alfa)))*np.log(alfa*xx/E0))+((alfa**(2/(1-alfa)))*(((1-alfa)*np.log(xx/E0*alfa**2))+(((np.log(xx/E0*alfa**2))**2)/2))))
     return [xx,yy]
 

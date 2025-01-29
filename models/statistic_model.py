@@ -36,10 +36,14 @@ class tally:
     @property
     def sigma(self):
         #return np.sqrt(self.variance/(self.iter-1))
-        return np.sqrt(self.variance/self.iter)
+        return np.sqrt((self.variance/self.iter))
+    @property
+    def sigma_smavg(self):
+        aa = self.sigma
+        return aa/np.sqrt(self.iter)
     @property
     def RSD(self):
-        aa = self.sigma
+        aa = self.sigma_smavg
         return aa/self.mean
 
 def rejection(ff, vett=np.array):
@@ -55,8 +59,6 @@ def rejection(ff, vett=np.array):
         if ips <= ff(ics):
             out = ics
     return out
-    
-particle_squeue = []
 
         
         

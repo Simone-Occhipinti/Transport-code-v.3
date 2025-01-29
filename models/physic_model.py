@@ -15,12 +15,12 @@ class particle:
         @property
         def velocity(self):
             out = np.sqrt(2*self.energy/self.neutron_mass)
-            return out 
+            return out
         self.weight = ww
         self.eof = 1
 
 class source:
-    def __init__(self,space_lim=tuple,space_n=int,initial_dist=list,intensity=float,type=str,pdf=None,range=None,pdf_log=None):
+    def __init__(self,nGen=int,space_lim=tuple,space_n=int,initial_dist=list,intensity=float,type=str,pdf=None,range=None,pdf_log=None):
         self.intensity = intensity
         self.type = type
         self.shannonentropy = []
@@ -32,22 +32,26 @@ class source:
                 self.energyrange = np.linspace(range[0],range[1],len(pdf))
         if len(space_lim)>1:
             self.spacerange = np.linspace(space_lim[0],space_lim[1],space_n)
-            self.spacedistribution = np.zeros(len(self.spacerange),dtype=int)
+            self.spaceref = (self.spacerange[:-1] + self.spacerange[1:]) / 2
+            self.spacedistribution = np.zeros(len(self.spaceref),dtype=int)
         else:
             self.spacerange = np.array([float('inf')])
+            self.spaceref = np.array([0])
             self.spacedistribution = np.array([0])
         self.n_generated = np.zeros(len(self.spacerange),dtype=int)
         for ii in initial_dist:
             self.spacedistribution[ii] += 1
-            self.n_generated[ii] += int(GV.Nstories/len(initial_dist))
+            self.n_generated[ii] += int(nGen/len(initial_dist))
+
     def get_position(self):
         indices = np.where(self.spacedistribution == 1)[0]
         rho = np.random.choice(indices)
         if len(self.spacerange)>1:
-            out = self.spacerange[rho]
+            out = self.spaceref[rho]
         else:
             out = 0
         return out
+
     def get_energy(self):
         if self.type == 'watt':
             out = watt(0.988,2.249)
@@ -60,6 +64,7 @@ class source:
         elif out < GV.EMIN:
             out = GV.EMIN
         return out
+    
     @property
     def tot_generated(self):
         return sum(self.n_generated)
