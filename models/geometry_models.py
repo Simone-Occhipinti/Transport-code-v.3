@@ -24,15 +24,9 @@ class direction:
         if degr is True:
             PHI *= pi/180
             TE *= pi/180
-        if TE >= 0 and TE <= pi:
-            self.teta = TE
-            self.phi = PHI
-        elif PHI >= 0 and PHI <= pi:
-            self.teta = PHI
-            self.phi = TE
-        else:
-            self.teta = 'errore'
-            self.phi = 'errore'
+        self.teta = TE
+        self.phi = PHI
+        
     def get_rnd_direction():
         phi = 2*pi*rnd.rand()
         teta = np.arccos(2*rnd.rand()-1)

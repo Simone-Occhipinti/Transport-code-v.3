@@ -11,7 +11,7 @@ import controllers.geometry_controller as geo_C
 
 def find_energy_index(pp=float,mat=np.array):
     if pp >= mat[-1]:
-        out = len(mat)
+        out = len(mat)-1
     elif pp <= mat[0]:
         out = 0
     else:

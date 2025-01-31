@@ -17,18 +17,14 @@ def generate_new_particle(ss=phy.source,ww=float,pp=None):
     else:
         rr = pp
     new_position = geo_c.get_point_from_surface(rr)
-    if new_position.distance > GV.LEnd:
-        new_position.x += -1E-4
-        new_position.y += -1E-4
-        new_position.z += -1E-4
     new_dir = geo.direction.get_rnd_direction()
     out = phy.particle(new_position,new_dir,new_energy,ww)
     return out
 
 def generate_population(ss=phy.source,ww=float,PS=list):
-    indices = np.where(ss.spacedistribution==1)[0]
+    indices = np.where(ss.spacedistribution>0)[0]
     for ii in indices:
-        for jj in range(ss.n_generated[ii]):
+        for _ in range(ss.n_generated[ii]):
             PS.append(generate_new_particle(ss,ww,ss.spaceref[ii]))
 
 def sample_free_flight(nn=phy.particle, mat=geo.domain):
@@ -109,7 +105,7 @@ def new_weight(nn=phy.particle, mat=geo.domain):
     return new_weight
 
 def add_fissionsite(pp=geo.point,nn=float,ss=phy.source):
-        space_index = np.where(ss.spacerange>=pp.distance)[0][0]
+        space_index = np.where(ss.spacerange>=pp.distance)[0][0]-1
         ss.spacedistribution[space_index] = 1
         rho = rnd.rand()
         N = int(nn)
@@ -128,7 +124,9 @@ def implicit_fission(nn=phy.particle,mat=geo.domain,kk=float,ss=phy.source):
         #SigmaF = mat.materials[mat_index].composition[is_index].micro_xs_fission[en_index]*mat.materials[mat_index].composition[is_index].atomic_density
         SigmaF = mat.materials[mat_index].macro_xs_fission(nn.energy)
         SigmaT = mat.materials[mat_index].macro_xs_total(nn.energy)
-        RR = nn.weight*(mat.materials[mat_index].composition[is_index].nu*SigmaF)/SigmaT/kk
-        kn = RR*kk/GV.Nstories
-        add_fissionsite(nn.position,RR,ss)
-    return kn
+        nu = mat.materials[mat_index].nu_avg(nn.energy)
+        #RR = nn.weight*(nu*SigmaF)/SigmaT/kk
+        #kn = RR*kk/GV.Nstories
+        kn = nn.weight*(nu*SigmaF)/SigmaT
+        add_fissionsite(nn.position,kn,ss)
+    return kn/GV.Nstories

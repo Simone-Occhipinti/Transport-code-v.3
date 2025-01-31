@@ -38,7 +38,7 @@ class source:
             self.spacerange = np.array([float('inf')])
             self.spaceref = np.array([0])
             self.spacedistribution = np.array([0])
-        self.n_generated = np.zeros(len(self.spacerange),dtype=int)
+        self.n_generated = np.zeros(len(self.spaceref),dtype=int)
         for ii in initial_dist:
             self.spacedistribution[ii] += 1
             self.n_generated[ii] += int(nGen/len(initial_dist))
@@ -77,8 +77,8 @@ class source:
         self.shannonentropy.append(HH)
         
     def reset_source(self):
-        self.spacedistribution = np.zeros(len(self.spacerange),dtype=int)
-        self.n_generated = np.zeros(len(self.spacerange),dtype=int)
+        self.spacedistribution = np.zeros(len(self.spaceref),dtype=int)
+        self.n_generated = np.zeros(len(self.spaceref),dtype=int)
 
 def watt(aa, bb):
         kk = 1 + bb/(8*aa)
