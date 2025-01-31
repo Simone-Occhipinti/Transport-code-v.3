@@ -42,7 +42,7 @@ def sample_free_flight(nn=phy.particle, mat=geo.domain):
                 ss = geo_c.distance_par2surf(nn,mat.materialposition[ii+mat_index][1])
             else:
                 ss = geo_c.distance_par2surf(nn,mat.materialposition[ii+mat_index][0])
-            rr[ii] += ss-rr[ii-1]
+            rr[ii] += ss-(rr[ii-1] if ii>0 else 0)
         for ii in range(mm):
             bm[ii] = np.sum([mat.materials[mat_index+jj].macro_xs_total(nn.energy)*rr[jj] for jj in range(ii+1)])
     else:
@@ -51,7 +51,7 @@ def sample_free_flight(nn=phy.particle, mat=geo.domain):
                 ss = geo_c.distance_par2surf(nn,mat.materialposition[ii][0])
             else:
                 ss = geo_c.distance_par2surf(nn,mat.materialposition[ii][1])
-            rr[mat_index-ii] += ss-rr[mat_index-ii-1]
+            rr[mat_index-ii] += ss-(rr[mat_index-ii-1] if ii<mat_index else 0)
         for ii in range(mat_index,-1,-1):
             bm[ii] = np.sum([mat.materials[ii-jj].macro_xs_total(nn.energy)*rr[jj] for jj in range(ii+1)])
     rho = rnd.rand()
@@ -67,13 +67,13 @@ def sample_free_flight(nn=phy.particle, mat=geo.domain):
     ll = (eta-b_minus1)/mat.materials[index].macro_xs_total(nn.energy)
     new_rr = ll+b_minus1
     if GV.PARTICLE_TYPE == 'neutron':
-        add_x = new_rr*np.sin(nn.direction.teta)*np.cos(nn.direction.phi)
-        add_y = new_rr*np.sin(nn.direction.teta)*np.sin(nn.direction.phi)
-        add_z = new_rr*np.cos(nn.direction.teta)
+        add_x = new_rr * np.sin(nn.direction.teta) * np.cos(nn.direction.phi)
+        add_y = new_rr * np.sin(nn.direction.teta) * np.sin(nn.direction.phi)
+        add_z = new_rr * np.cos(nn.direction.teta)
     else:
-        add_x = new_rr*np.sin(-nn.direction.teta)*np.cos(-nn.direction.phi)
-        add_y = new_rr*np.sin(-nn.direction.teta)*np.sin(-nn.direction.phi)
-        add_z = new_rr*np.cos(-nn.direction.teta)
+        add_x = new_rr * np.sin(-nn.direction.teta) * np.cos(nn.direction.phi + np.pi)
+        add_y = new_rr * np.sin(-nn.direction.teta) * np.sin(nn.direction.phi + np.pi)
+        add_z = new_rr * np.cos(-nn.direction.teta)
     return geo_c.sumpos(nn.position,geo.point((add_x,add_y,add_z)))
 
 def sample_energy_stepf(nn=phy.particle,mat=geo.domain):
@@ -114,14 +114,12 @@ def add_fissionsite(pp=geo.point,nn=float,ss=phy.source):
         else:
             ss.n_generated[space_index] += N
 
-def implicit_fission(nn=phy.particle,mat=geo.domain,kk=float,ss=phy.source):
+def implicit_fission(nn=phy.particle,mat=geo.domain,ss=phy.source):
     mat_index = mat_c.find_position(nn.position,mat)
     is_index = mat_c.sample_fission_isotope(nn,mat.materials[mat_index])
     if is_index == None:
         kn = 0
     else:
-        en_index = mat_c.find_energy_index(nn.energy,mat.materials[mat_index].composition[is_index].energy)
-        #SigmaF = mat.materials[mat_index].composition[is_index].micro_xs_fission[en_index]*mat.materials[mat_index].composition[is_index].atomic_density
         SigmaF = mat.materials[mat_index].macro_xs_fission(nn.energy)
         SigmaT = mat.materials[mat_index].macro_xs_total(nn.energy)
         nu = mat.materials[mat_index].nu_avg(nn.energy)
