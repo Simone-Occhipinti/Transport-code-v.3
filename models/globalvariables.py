@@ -17,13 +17,13 @@ EMIN = 1E-5
 EMAX = 2E7
 #EMAX = 4*EMIN
 EE = (EMIN,EMAX)
-Nstories = 1E2
+Nstories = 1E1
 SOURCE_POSITION = [(0.,0.,0.)]
 L0 = 0
 LEnd = 8.7407  #cm
 #LL = (0.,)
 Wmin = 0.25
-Wmax = 2
+Wmax = 20
 #Groups = np.logspace(np.log10(EMIN),np.log10(EMAX),int(200))
 
 # only for eigenvalue calculationd

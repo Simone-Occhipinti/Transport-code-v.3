@@ -120,7 +120,7 @@ def add_fissionsite(pp=geo.point,nn=float,ss=phy.source):
         else:
             ss.n_generated.append(N)
 
-def implicit_fission(nn=phy.particle,mat=geo.domain,ss=phy.source):
+def implicit_fission(nn=phy.particle,mat=geo.domain,ss=phy.source,KK=float):
     mat_index = mat_c.find_position(nn.position,mat)
     is_index = mat_c.sample_fission_isotope(nn,mat.materials[mat_index])
     if is_index == None:
@@ -135,5 +135,6 @@ def implicit_fission(nn=phy.particle,mat=geo.domain,ss=phy.source):
             chi = phy.watt_distribution(nn.energy)
             nu = chi/SigmaF*SS
         kn = nn.weight*(nu*SigmaF)/SigmaT
-        add_fissionsite(nn.position,kn,ss)
+        RR = kn/KK
+        add_fissionsite(nn.position,RR,ss)
     return kn/GV.Nstories

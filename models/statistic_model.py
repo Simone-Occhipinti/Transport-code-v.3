@@ -35,7 +35,6 @@ class tally:
         return self.mean
     @property
     def sigma(self):
-        #return np.sqrt(self.variance/(self.iter-1))
         return np.sqrt((self.variance/self.iter))
     @property
     def sigma_smavg(self):
