@@ -10,22 +10,21 @@ import models.geometry_models as geo
 import models.globalvariables as GV
 import models.statistic_model as stat
 
-def generate_new_particle(ss=phy.source,ww=float,pp=None):
-    new_energy = ss.get_energy()
+def generate_new_particle(ss=phy.source,ww=float,mat=geo.domain,pp=None):
     if pp == None:
         rr = ss.get_position()
     else:
         rr = pp
-    new_position = geo_c.get_point_from_surface(rr)
+    mat_index = mat_c.find_position(pp,mat)
     new_dir = geo.direction.get_rnd_direction()
-    out = phy.particle(new_position,new_dir,new_energy,ww)
+    new_energy = ss.get_energy(mat.materials[mat_index])
+    out = phy.particle(rr,new_dir,new_energy,ww)
     return out
 
-def generate_population(ss=phy.source,ww=float,PS=list):
-    indices = np.where(ss.spacedistribution>0)[0]
-    for ii in indices:
+def generate_population(ss=phy.source,ww=float,PS=list,mat=geo.domain):
+    for ii in range(len(ss.spacedistribution)):
         for _ in range(ss.n_generated[ii]):
-            PS.append(generate_new_particle(ss,ww,ss.spaceref[ii]))
+            PS.append(generate_new_particle(ss,ww,mat,ss.spacedistribution[ii]))
 
 def sample_free_flight(nn=phy.particle, mat=geo.domain):
     mat_index = mat_c.find_position(nn.position,mat)
@@ -33,37 +32,45 @@ def sample_free_flight(nn=phy.particle, mat=geo.domain):
     if dir > 0:
         mm = len(mat.materials)-mat_index
     else:
-        mm = mat_index+1
+        mm = mat_index+1+len(mat.materials)
     bm = np.zeros(mm)
     rr = np.zeros(mm)
     if dir > 0:
         for ii in range(mm):
             if ii == 0:
-                ss = geo_c.distance_par2surf(nn,mat.materialposition[ii+mat_index][1])
+                ss = geo_c.distance_to_surface(nn,mat.materialposition[ii+mat_index][1],dir)
             else:
-                ss = geo_c.distance_par2surf(nn,mat.materialposition[ii+mat_index][0])
+                ss = geo_c.distance_to_surface(nn,mat.materialposition[ii+mat_index][0],dir)
             rr[ii] += ss-(rr[ii-1] if ii>0 else 0)
         for ii in range(mm):
-            bm[ii] = np.sum([mat.materials[mat_index+jj].macro_xs_total(nn.energy)*rr[jj] for jj in range(ii+1)])
+            bm[ii] = np.sum([mat.materials[mat_index + jj].macro_xs_total(nn.energy) * rr[jj] for jj in range(ii + 1)])
     else:
         for ii in range(mat_index,-1,-1):
             if ii == mat_index:
-                ss = geo_c.distance_par2surf(nn,mat.materialposition[ii][0])
+                ss = np.max([0,geo_c.distance_to_surface(nn,mat.materialposition[ii][0],dir)])
             else:
-                ss = geo_c.distance_par2surf(nn,mat.materialposition[ii][1])
+                ss = np.max([0,geo_c.distance_to_surface(nn,mat.materialposition[ii][1],dir)])
             rr[mat_index-ii] += ss-(rr[mat_index-ii-1] if ii<mat_index else 0)
+        for ii in range(len(mat.materials)):
+            if ii == 0:
+                ss = np.max([0,geo_c.distance_to_surface(nn,mat.materialposition[ii][1],-dir)])
+            else:
+                ss = np.max([0,geo_c.distance_to_surface(nn,mat.materialposition[ii][0],-dir)])
+            rr[mat_index+ii+1] += ss-rr[mat_index+ii]
         for ii in range(mat_index,-1,-1):
             bm[ii] = np.sum([mat.materials[ii-jj].macro_xs_total(nn.energy)*rr[jj] for jj in range(ii+1)])
+        for ii in range(len(mat.materials)):
+            bm[mat_index+ii+1] = np.sum([mat.materials[jj].macro_xs_total(nn.energy)*rr[mat_index+jj] for jj in range(ii+1)])
     rho = rnd.rand()
     eta = -np.log(rho)
     for region in range(1,mm+1):
-        b_minus1 = bm[region-2] if ii>1 else 0
+        b_minus1 = bm[region - 2] if region > 1 else 0
         if b_minus1 < eta <= bm[region-1]:
             break
     if dir > 0:
         index = region-1
     else:
-        index = mat_index-region+1
+        index = mat_index-region+1 if region-1 <= mat_index else region-2-mat_index
     ll = (eta-b_minus1)/mat.materials[index].macro_xs_total(nn.energy)
     new_rr = ll+b_minus1
     if GV.PARTICLE_TYPE == 'neutron':
@@ -85,10 +92,10 @@ def sample_energy_stepf(nn=phy.particle,mat=geo.domain):
     else:
         low_i = mat_c.find_energy_index(nn.energy,mat.materials[mat_index].composition[is_index].energy)
         up_i = mat_c.find_energy_index(nn.energy/alfa,mat.materials[mat_index].composition[is_index].energy)
-        ee = mat.materials[mat_index].composition[is_index].energy[low_i:up_i]
-        sigma = mat.materials[mat_index].macro_scattering[low_i:up_i]
+        ee = mat.materials[mat_index].composition[is_index].energy[low_i:up_i+1]
+        sigma = mat.materials[mat_index].macro_scattering[low_i:up_i+1]
         SS = np.trapz(sigma/ee,ee)
-        ff = lambda eout: mat.materials[mat_index].macro_xs_scattering(eout)/SS/eout
+        ff = lambda eout: (mat.materials[mat_index].macro_xs_scattering(eout) / SS / eout) if not np.isclose(eout, 0) else 0
         new_energy = stat.rejection(ff,ee)
     return new_energy
 
@@ -105,14 +112,13 @@ def new_weight(nn=phy.particle, mat=geo.domain):
     return new_weight
 
 def add_fissionsite(pp=geo.point,nn=float,ss=phy.source):
-        space_index = np.where(ss.spacerange>=pp.distance)[0][0]-1
-        ss.spacedistribution[space_index] = 1
+        ss.spacedistribution.append(pp)
         rho = rnd.rand()
         N = int(nn)
         if rho < nn-N:
-            ss.n_generated[space_index] += N+1
+            ss.n_generated.append(N+1)
         else:
-            ss.n_generated[space_index] += N
+            ss.n_generated.append(N)
 
 def implicit_fission(nn=phy.particle,mat=geo.domain,ss=phy.source):
     mat_index = mat_c.find_position(nn.position,mat)
@@ -122,9 +128,12 @@ def implicit_fission(nn=phy.particle,mat=geo.domain,ss=phy.source):
     else:
         SigmaF = mat.materials[mat_index].macro_xs_fission(nn.energy)
         SigmaT = mat.materials[mat_index].macro_xs_total(nn.energy)
-        nu = mat.materials[mat_index].nu_avg(nn.energy)
-        #RR = nn.weight*(nu*SigmaF)/SigmaT/kk
-        #kn = RR*kk/GV.Nstories
+        if GV.PARTICLE_TYPE == 'neutron':
+            nu = mat.materials[mat_index].nu_avg(nn.energy)
+        else:
+            SS = np.trapz(mat.materials[mat_index].nu*mat.materials[mat_index].macro_fission,mat.materials[mat_index].energy)
+            chi = phy.watt_distribution(nn.energy)
+            nu = chi/SigmaF*SS
         kn = nn.weight*(nu*SigmaF)/SigmaT
         add_fissionsite(nn.position,kn,ss)
     return kn/GV.Nstories

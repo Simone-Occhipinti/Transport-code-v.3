@@ -31,11 +31,40 @@ def find_direction(pp=phy.particle):
     else:
         return -1
 
-def distance_par2surf(pp=phy.particle,ll=float):
-    r_punto = pp.position.z*np.cos(pp.direction.teta) + pp.position.y*np.sin(pp.direction.teta)*np.sin(pp.direction.phi) + pp.position.x*np.sin(pp.direction.teta)*np.cos(pp.direction.phi)
-    deltaD = ll**2 - pp.position.distance**2
-    Delta = r_punto**2 + deltaD**2
-    return -r_punto+Delta
+def distance_to_surface(pp=phy.particle, ll=float, direction=int):
+
+    xx, yy, zz= pp.position.x, pp.position.y, pp.position.z
+    theta, phi = pp.direction.teta, pp.direction.phi
+
+    # Convert spherical angles to unit vector
+    dx = np.sin(theta) * np.cos(phi)
+    dy = np.sin(theta) * np.sin(phi)
+    dz = np.cos(theta)
+    
+    if GV.GEOMETRY_TYPE == 'sphere':
+        AA = dx**2 + dy**2 + dz**2
+        BB = 2*(dx*xx + dy*yy + dz*zz)
+        CC = xx**2 + yy**2 + zz**2 - ll**2
+
+        Delta = BB**2 - 4*AA*CC
+        if Delta >= 0:
+            t1 = (-BB - np.sqrt(Delta))/(2*AA)
+            t2 = (-BB + np.sqrt(Delta))/(2*AA)
+
+            x1, y1, z1 = xx+dx*t1, yy+dy*t1, zz+dz*t1
+            x2, y2, z2 = xx+dx*t2, yy+dy*t2, zz+dz*t2
+
+            D1 = np.sqrt(((xx-x1)**2 + (yy-y1)**2 + (zz-z1)**2))
+            D2 = np.sqrt(((xx-x2)**2 + (yy-y2)**2 + (zz-z2)**2))
+
+            out = min([D1,D2]) if direction > 0 else max([D1,D2])
+        else:
+            out = 0
+
+    elif GV.GEOMETRY_TYPE == 'slab':
+        out = abs((ll-zz)/dz)
+        
+    return out
 
 def is_outofbound(pp=phy.particle,type=str):
     if type == 'space':

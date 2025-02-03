@@ -46,7 +46,7 @@ def sample_fission_isotope(pp=phy.particle,mat=mat.material):
         nn = len(mat.composition)
         XS = np.zeros(nn)
         for ii in range(nn):
-            XS += mat.composition[ii].micro_xs_fission[en_index]*mat.composition[ii].atomic_density/mat.macro_fission[en_index]
+            XS[ii] += mat.composition[ii].micro_xs_fission[en_index]*mat.composition[ii].atomic_density/mat.macro_fission[en_index]
         cumXS = np.cumsum(XS)
         rho = rnd.rand()
         out = np.where(cumXS>rho)[0][0]

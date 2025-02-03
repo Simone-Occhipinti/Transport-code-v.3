@@ -40,7 +40,8 @@ class material:
             self.macro_fission += parts[ii].micro_xs_fission*parts[ii].atomic_density
             self.macro_capture += parts[ii].micro_xs_capture*parts[ii].atomic_density
             self.nu += parts[ii].nu*parts[ii].micro_xs_fission*parts[ii].atomic_density
-        self.nu *= 1/self.macro_fission
+        if np.any(self.macro_fission>0):
+            self.nu *= 1/self.macro_fission
     def macro_xs_total(self, en=float):
         if en >= self.energy[-1]:
             out = self.macro_total[-1]

@@ -53,4 +53,4 @@ class domain:
                 self.materialposition.append((mate[ii][1],mate[ii][2]))
         else:
             self.materials.append(mate[0][0])
-            self.materialposition.append((0,float('inf')))
+            self.materialposition.append((0,1E10))
