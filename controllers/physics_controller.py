@@ -72,7 +72,7 @@ def sample_free_flight(nn=phy.particle, mat=geo.domain):
     else:
         index = mat_index-region+1 if region-1 <= mat_index else region-2-mat_index
     ll = (eta-b_minus1)/mat.materials[index].macro_xs_total(nn.energy)
-    new_rr = ll+b_minus1
+    new_rr = ll+rr[region-2] if region > 1 else ll
     if GV.PARTICLE_TYPE == 'neutron':
         add_x = new_rr * np.sin(nn.direction.teta) * np.cos(nn.direction.phi)
         add_y = new_rr * np.sin(nn.direction.teta) * np.sin(nn.direction.phi)
@@ -92,8 +92,14 @@ def sample_energy_stepf(nn=phy.particle,mat=geo.domain):
     else:
         low_i = mat_c.find_energy_index(nn.energy,mat.materials[mat_index].composition[is_index].energy)
         up_i = mat_c.find_energy_index(nn.energy/alfa,mat.materials[mat_index].composition[is_index].energy)
-        ee = mat.materials[mat_index].composition[is_index].energy[low_i:up_i+1]
-        sigma = mat.materials[mat_index].macro_scattering[low_i:up_i+1]
+        if low_i == up_i:
+            sigma = np.array([mat.materials[mat_index].composition[is_index].micro_xs_scattering[up_i-1],mat.materials[mat_index].composition[is_index].micro_xs_scattering[up_i]])
+            sigma *= mat.materials[mat_index].composition[is_index].atomic_density
+            ee = np.array([mat.materials[mat_index].energy[low_i-1],mat.materials[mat_index].energy[low_i]])
+        else:
+            ee = mat.materials[mat_index].composition[is_index].energy[low_i-1:up_i+1]
+            sigma = mat.materials[mat_index].composition[is_index].micro_xs_scattering[low_i-1:up_i+1]
+            sigma *= mat.materials[mat_index].composition[is_index].atomic_density
         SS = np.trapz(sigma/ee,ee)
         ff = lambda eout: (mat.materials[mat_index].macro_xs_scattering(eout) / SS / eout) if not np.isclose(eout, 0) else 0
         new_energy = stat.rejection(ff,ee)
@@ -101,14 +107,22 @@ def sample_energy_stepf(nn=phy.particle,mat=geo.domain):
 
 def new_weight(nn=phy.particle, mat=geo.domain):
     mat_index = mat_c.find_position(nn.position,mat)
-    new_weight = nn.weight*mat.materials[mat_index].macro_xs_scattering(nn.energy)/mat.materials[mat_index].macro_xs_total(nn.energy)
+    is_index = mat_c.sample_isotope_index(nn,mat)
+    new_weight = nn.weight*mat.materials[mat_index].composition[is_index].macro_xs_scattering(nn.energy)/mat.materials[mat_index].composition[is_index].macro_xs_total(nn.energy)
     if GV.PARTICLE_TYPE == 'adjunction':
-        is_index = mat_c.sample_isotope_index(nn,mat)
         alfa = mat.materials[mat_index].composition[is_index].alpha
         low_i = mat_c.find_energy_index(nn.energy,mat.materials[mat_index].composition[is_index].energy)
         up_i = mat_c.find_energy_index(nn.energy/alfa,mat.materials[mat_index].composition[is_index].energy)
-        SS = np.trapz(mat.materials[mat_index].macro_scattering[low_i:up_i]/mat.materials[mat_index].composition[is_index].energy[low_i:up_i],mat.materials[mat_index].composition[is_index].energy[low_i:up_i])
-        new_weight *= 1/(1-alfa)/mat.materials[mat_index].macro_xs_scattering(nn.energy)*SS
+        if low_i == up_i:
+            sigma = np.array([mat.materials[mat_index].composition[is_index].micro_xs_scattering[up_i-1],mat.materials[mat_index].composition[is_index].micro_xs_scattering[up_i]])
+            sigma *= mat.materials[mat_index].composition[is_index].atomic_density
+            ee = np.array([mat.materials[mat_index].energy[low_i-1],mat.materials[mat_index].energy[low_i]])
+        else:
+            ee = mat.materials[mat_index].composition[is_index].energy[low_i-1:up_i+1]
+            sigma = mat.materials[mat_index].composition[is_index].micro_xs_scattering[low_i-1:up_i+1]
+            sigma *= mat.materials[mat_index].composition[is_index].atomic_density
+        SS = np.trapz(sigma/ee,ee)
+        new_weight *= 1/(1-alfa)/mat.materials[mat_index].composition[is_index].macro_xs_scattering(nn.energy)*SS
     return new_weight
 
 def add_fissionsite(pp=geo.point,nn=float,ss=phy.source):
@@ -126,12 +140,12 @@ def implicit_fission(nn=phy.particle,mat=geo.domain,ss=phy.source,KK=float):
     if is_index == None:
         kn = 0
     else:
-        SigmaF = mat.materials[mat_index].macro_xs_fission(nn.energy)
-        SigmaT = mat.materials[mat_index].macro_xs_total(nn.energy)
+        SigmaF = mat.materials[mat_index].composition[is_index].macro_xs_fission(nn.energy)
+        SigmaT = mat.materials[mat_index].composition[is_index].macro_xs_total(nn.energy)
         if GV.PARTICLE_TYPE == 'neutron':
-            nu = mat.materials[mat_index].nu_avg(nn.energy)
+            nu = mat.materials[mat_index].composition[is_index].nu_avg(nn.energy)
         else:
-            SS = np.trapz(mat.materials[mat_index].nu*mat.materials[mat_index].macro_fission,mat.materials[mat_index].energy)
+            SS = np.trapz(mat.materials[mat_index].composition[is_index].nu*mat.materials[mat_index].composition[is_index].micro_xs_fission*mat.materials[mat_index].composition[is_index].atomic_density,mat.materials[mat_index].composition[is_index].energy)
             chi = phy.watt_distribution(nn.energy)
             nu = chi/SigmaF*SS
         kn = nn.weight*(nu*SigmaF)/SigmaT

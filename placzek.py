@@ -1,7 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from models import globalvariables as GV
 
-E0 = 2E6
+
+E0 = GV.EREF
 
 def placzek1(aa):
     alfa = ((aa-1)/(aa+1))**2
@@ -43,10 +45,10 @@ def adj_placzek1(aa,fsigma):
     for ii in xx:
         sigma.append(fsigma(ii))
     sigma = np.array(sigma)
-    #sigma = fsigma(E0)
+    sigma0 = fsigma(E0)
     #sigma = 1
     #yy = (1/(1-alfa))*(xx/E0)**(1/(1-alfa)) 
-    yy = (1/(E0*sigma*(1-alfa)))*(xx/E0)**(alfa/(1-alfa))
+    yy = sigma*(1/(E0*sigma0*(1-alfa)))*(xx/E0)**(alfa/(1-alfa))
     return [xx,yy]
 
 def adj_placzek2(aa,fsigma):
@@ -56,10 +58,10 @@ def adj_placzek2(aa,fsigma):
     for ii in xx:
         sigma.append(fsigma(ii))
     sigma = np.array(sigma)
-    #sigma = fsigma(E0)
+    sigma0 = fsigma(E0)
     #yy = (1/(1-alfa)**2)*((xx/E0)**(1/(1-alfa)))*(((1-alfa)*(1-alfa**(1/(1-alfa))))-((alfa**(1/(1-alfa)))*(np.log(alfa*xx/E0))))
     #sigma = 1
-    yy = (1/(E0*sigma*(1-alfa)**2))*((xx/E0)**(alfa/(1-alfa)))*(((1-alfa)*(1-alfa**(1/(1-alfa))))-((alfa**(1/(1-alfa)))*np.log(alfa*xx/E0)))
+    yy = sigma*(1/(E0*sigma0*(1-alfa)**2))*((xx/E0)**(alfa/(1-alfa)))*(((1-alfa)*(1-alfa**(1/(1-alfa))))-((alfa**(1/(1-alfa)))*np.log(alfa*xx/E0)))
     return [xx,yy]
 
 def adj_placzek3(aa,fsigma):
@@ -69,9 +71,9 @@ def adj_placzek3(aa,fsigma):
     for ii in xx:
         sigma.append(fsigma(ii))
     sigma = np.array(sigma)
-    #sigma = fsigma(E0)
+    sigma0 = fsigma(E0)
     #sigma = 1
-    yy = (1/(E0*sigma*(1-alfa)**3))*((xx/E0)**(alfa/(1-alfa)))*((((1-alfa)**2)*(1-alfa**(1/(1-alfa))))-((1-alfa)*(alfa**(1/(1-alfa)))*np.log(alfa*xx/E0))+((alfa**(2/(1-alfa)))*(((1-alfa)*np.log(xx/E0*alfa**2))+(((np.log(xx/E0*alfa**2))**2)/2))))
+    yy = sigma*(1/(E0*sigma0*(1-alfa)**3))*((xx/E0)**(alfa/(1-alfa)))*((((1-alfa)**2)*(1-alfa**(1/(1-alfa))))-((1-alfa)*(alfa**(1/(1-alfa)))*np.log(alfa*xx/E0))+((alfa**(2/(1-alfa)))*(((1-alfa)*np.log(xx/E0*alfa**2))+(((np.log(xx/E0*alfa**2))**2)/2))))
     return [xx,yy]
 
 def adj_placzek(AA,sigma):

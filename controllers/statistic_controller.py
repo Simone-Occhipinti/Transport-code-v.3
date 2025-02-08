@@ -53,6 +53,7 @@ def splitting(pp=phy.particle,PS = list):
     if pp.weight >= GV.Wmax:
         N = pp.weight/GV.Wmax
         if N == int(N):
+            N = int(N)
             for _ in range(N):
                 PS.append(phy.particle(pp.position,pp.direction,pp.energy,pp.weight/N))
             pp.weight *= 1/N

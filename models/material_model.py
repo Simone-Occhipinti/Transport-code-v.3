@@ -21,6 +21,56 @@ class isotope:
         self.micro_xs_capture = self.micro_xs_absorption-self.micro_xs_fission
         self.atomic_density = dens
         self.energy = energy
+    
+    def macro_xs_total(self, en=float):
+        if en >= self.energy[-1]:
+            out = self.micro_xs_total[-1]
+        elif en <= self.energy[0]:
+            out = self.micro_xs_total[0]
+        else:
+            index = np.where(self.energy>en)[0][0]
+            out = np.interp(en, [self.energy[index-1],self.energy[index]], [self.micro_xs_total[index-1],self.micro_xs_total[index]])
+        return out*self.atomic_density
+    
+    def macro_xs_scattering(self, en=float):
+        if en >= self.energy[-1]:
+            out = self.micro_xs_scattering[-1]
+        elif en <= self.energy[0]:
+            out = self.micro_xs_scattering[0]
+        else:
+            index = np.where(self.energy>en)[0][0]
+            out = np.interp(en, [self.energy[index-1],self.energy[index]], [self.micro_xs_scattering[index-1],self.micro_xs_scattering[index]])
+        return out*self.atomic_density
+    
+    def macro_xs_absorption(self, en=float):
+        if en >= self.energy[-1]:
+            out = self.micro_xs_absorption[-1]
+        elif en <= self.energy[0]:
+            out = self.micro_xs_absorption[0]
+        else:
+            index = np.where(self.energy>en)[0][0]
+            out = np.interp(en, [self.energy[index-1],self.energy[index]], [self.micro_xs_absorption[index-1],self.micro_xs_absorption[index]])
+        return out*self.atomic_density
+    
+    def macro_xs_fission(self, en=float):
+        if en >= self.energy[-1]:
+            out = self.micro_xs_fission[-1]
+        elif en <= self.energy[0]:
+            out = self.micro_xs_fission[0]
+        else:
+            index = np.where(self.energy>en)[0][0]
+            out = np.interp(en, [self.energy[index-1],self.energy[index]], [self.micro_xs_fission[index-1],self.micro_xs_fission[index]])
+        return out*self.atomic_density
+    
+    def nu_avg(self, en=float):
+        if en >= self.energy[-1]:
+            out = self.nu[-1]
+        elif en <= self.energy[0]:
+            out = self.nu[0]
+        else:
+            index = np.where(self.energy>en)[0][0]
+            out = np.interp(en, [self.energy[index-1],self.energy[index]], [self.nu[index-1],self.nu[index]])
+        return out
 
 class material:
     def __init__(self, parts=list[isotope]):
@@ -86,13 +136,4 @@ class material:
         else:
             index = np.where(self.energy>en)[0][0]
             out = np.interp(en, [self.energy[index-1],self.energy[index]], [self.nu[index-1],self.nu[index]])
-        return out
-    def macro_xs_capture(self, en=float):
-        if en >= self.energy[-1]:
-            out = self.macro_capture[-1]
-        elif en <= self.energy[0]:
-            out = self.macro_capture[0]
-        else:
-            index = np.where(self.energy>en)[0][0]
-            out = np.interp(en, [self.energy[index-1],self.energy[index]], [self.macro_capture[index-1],self.macro_capture[index]])
         return out

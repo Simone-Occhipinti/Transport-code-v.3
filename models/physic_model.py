@@ -88,8 +88,9 @@ class source:
 
 def watt_distribution(eout, aa=0.988, bb=2.249):
     xx = eout/1E6
-    AA = ((np.sqrt((pi*bb)/(4*aa)))*(np.exp(bb/(4*aa))))/aa
-    out = AA*(np.exp(-aa*xx))*np.sinh(np.sqrt(bb*xx))
+    #AA = ((np.sqrt((pi*bb)/(4*aa)))*(np.exp(bb/(4*aa))))/aa
+    #out = AA*(np.exp(-aa*xx))*np.sinh(np.sqrt(bb*xx))
+    out = 0.4527*(np.exp(-xx/0.965))*np.sinh(np.sqrt(2.29*xx))
     return out
 
 def watt(aa=0.988, bb=2.249):
