@@ -36,16 +36,16 @@ class source:
         if len(space_lim)>1:
             self.spacerange = np.linspace(space_lim[0],space_lim[1],space_n)
             self.spaceref = (self.spacerange[:-1] + self.spacerange[1:]) / 2
-            self.spacedistribution = []
-            self.n_generated = []
+            self.spacedistribution = [[] for _ in range(len(self.spaceref))]
+            self.n_generated = [[] for _ in range(len(self.spaceref))]
         else:
             self.spacerange = np.array([float('inf')])
             self.spaceref = np.array([0])
             self.spacedistribution = []
             self.n_generated = []
-        for ii in initial_dist:
-            self.spacedistribution.append(geo.point(ii))
-            self.n_generated.append(int(nGen/len(initial_dist)))
+        for ii in range(len(initial_dist)):
+            self.spacedistribution[ii].append(geo.point(initial_dist[ii]))
+            self.n_generated[ii].append(int(nGen/len(initial_dist)))
 
     def get_position(self):
         rho = random.randrange(len(self.spacedistribution))
@@ -55,12 +55,12 @@ class source:
             out = geo.point((0,0,0))
         return out
 
-    def get_energy(self,mat=mat.material):
+    def get_energy(self,mat=mat.isotope):
         if self.type == 'watt':
             if GV.PARTICLE_TYPE == 'neutron':
                 out = watt()
             else:
-                SS = np.trapz(mat.nu*mat.macro_fission,mat.energy)
+                SS = np.trapz(mat.nu*mat.micro_xs_fission*mat.atomic_density,mat.energy)
                 ff = lambda eout: mat.nu_avg(eout)*mat.macro_xs_fission(eout)/SS
                 out = stat.rejection(ff,mat.energy)
         elif self.type == 'fixed':
@@ -78,13 +78,14 @@ class source:
     def s_entropy(self):
         HH = 0
         for ii in self.n_generated:
-            if ii > 0:
-                HH += -ii*np.log2(ii)
+            pp = sum(ii)/self.tot_generated
+            if pp > 0:
+                HH += -pp*np.log2(pp)
         self.shannonentropy.append(HH)
         
     def reset_source(self):
-        self.spacedistribution = []
-        self.n_generated = []
+        self.spacedistribution = [[] for _ in range(len(self.spaceref))]
+        self.n_generated = [[] for _ in range(len(self.spaceref))]
 
 def watt_distribution(eout, aa=0.988, bb=2.249):
     xx = eout/1E6

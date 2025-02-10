@@ -11,20 +11,18 @@ import models.globalvariables as GV
 import models.statistic_model as stat
 
 def generate_new_particle(ss=phy.source,ww=float,mat=geo.domain,pp=None):
-    if pp == None:
-        rr = ss.get_position()
-    else:
-        rr = pp
+    rr = pp[0]
     mat_index = mat_c.find_position(pp,mat)
     new_dir = geo.direction.get_rnd_direction()
-    new_energy = ss.get_energy(mat.materials[mat_index])
+    new_energy = ss.get_energy(mat.materials[mat_index].composition[pp[1]])
     out = phy.particle(rr,new_dir,new_energy,ww)
     return out
 
 def generate_population(ss=phy.source,ww=float,PS=list,mat=geo.domain):
     for ii in range(len(ss.spacedistribution)):
-        for _ in range(ss.n_generated[ii]):
-            PS.append(generate_new_particle(ss,ww,mat,ss.spacedistribution[ii]))
+        for jj in range(len(ss.spacedistribution[ii])):
+            for _ in range(ss.n_generated[ii][jj]):
+                PS.append(generate_new_particle(ss,ww,mat,ss.spacedistribution[ii][jj]))
 
 def sample_free_flight(nn=phy.particle, mat=geo.domain):
     mat_index = mat_c.find_position(nn.position,mat)
@@ -125,14 +123,18 @@ def new_weight(nn=phy.particle, mat=geo.domain):
         new_weight *= 1/(1-alfa)/mat.materials[mat_index].composition[is_index].macro_xs_scattering(nn.energy)*SS
     return new_weight
 
-def add_fissionsite(pp=geo.point,nn=float,ss=phy.source):
-        ss.spacedistribution.append(pp)
+def add_fissionsite(pp=geo.point,isotope=int,nn=float,ss=phy.source):
+        if len(GV.LL) > 1:
+            space_index = mat_c.find_energy_index(pp.distance,ss.spacerange)-1
+        else:
+            space_index = 0
+        ss.spacedistribution[space_index].append([pp,isotope])
         rho = rnd.rand()
         N = int(nn)
         if rho < nn-N:
-            ss.n_generated.append(N+1)
+            ss.n_generated[space_index].append(N+1)
         else:
-            ss.n_generated.append(N)
+            ss.n_generated[space_index].append(N)
 
 def implicit_fission(nn=phy.particle,mat=geo.domain,ss=phy.source,KK=float):
     mat_index = mat_c.find_position(nn.position,mat)
@@ -150,5 +152,5 @@ def implicit_fission(nn=phy.particle,mat=geo.domain,ss=phy.source,KK=float):
             nu = chi/SigmaF*SS
         kn = nn.weight*(nu*SigmaF)/SigmaT
         RR = kn/KK
-        add_fissionsite(nn.position,RR,ss)
+        add_fissionsite(nn.position,is_index,RR,ss)
     return kn/GV.Nstories
