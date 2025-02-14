@@ -27,9 +27,12 @@ def find_direction(pp=phy.particle):
     delta = geo.point((delta_x,delta_y,delta_z))
     prova = sumpos(pp.position,delta)
     if pp.position.distance <= prova.distance:
-        return 1
+        out = 1
     else:
-        return -1
+        out = -1
+    if GV.PARTICLE_TYPE == 'adjunction':
+        out *= -1
+    return out
 
 def distance_to_surface(pp=phy.particle, ll=float, direction=int):
 

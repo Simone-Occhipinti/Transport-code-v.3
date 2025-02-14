@@ -10,19 +10,42 @@ import models.geometry_models as geo
 import models.globalvariables as GV
 import models.statistic_model as stat
 
-def generate_new_particle(ss=phy.source,ww=float,mat=geo.domain,pp=None):
-    rr = pp[0]
-    mat_index = mat_c.find_position(pp,mat)
+def generate_new_particle(ss=phy.source,ww=float,mat=mat.isotope,pp=None):
+    if len(GV.LL) <= 1 or pp == None:
+        rr = geo.point((0,0,0))
+    else:
+        rr = pp
     new_dir = geo.direction.get_rnd_direction()
-    new_energy = ss.get_energy(mat.materials[mat_index].composition[pp[1]])
+    new_energy = ss.get_energy(mat)
     out = phy.particle(rr,new_dir,new_energy,ww)
     return out
 
-def generate_population(ss=phy.source,ww=float,PS=list,mat=geo.domain):
-    for ii in range(len(ss.spacedistribution)):
-        for jj in range(len(ss.spacedistribution[ii])):
-            for _ in range(ss.n_generated[ii][jj]):
-                PS.append(generate_new_particle(ss,ww,mat,ss.spacedistribution[ii][jj]))
+def initialize_population(ss=phy.source,PS=list,mat=geo.domain):
+    if all(len(sublist) == 0 for sublist in ss.spacedistribution) or GV.simulation_type=='placzek':
+        for _ in range(int(GV.Nstories)):
+            if len(mat.materials)>1:
+                mat_index = rnd.randint(0,len(mat.materials)-1)
+            else:
+                mat_index = 0
+            if len(mat.materials[mat_index].composition)>1:
+                is_index = rnd.randint(0,len(mat.materials[mat_index].composition)-1)
+            else:
+                is_index = 0
+            PS.append(generate_new_particle(ss,1.,mat.materials[mat_index].composition[is_index]))
+    else:
+        ww = GV.Nstories/ss.tot_generated
+        for ii in range(len(ss.spacedistribution)):
+            if len(ss.spacedistribution[ii])>0:
+                for jj in ss.spacedistribution[ii]:
+                    for _ in range(jj.nn):
+                        if ww <= GV.Wmin:
+                            rho = rnd.rand()
+                            if rho <= ww:
+                                out = generate_new_particle(ss,1.,mat.materials[jj.mat_i].composition[jj.iso_i],jj.position)
+                                PS.append(out)
+                        else:
+                            out = generate_new_particle(ss,ww,mat.materials[jj.mat_i].composition[jj.iso_i],jj.position)
+                            PS.append(out)
 
 def sample_free_flight(nn=phy.particle, mat=geo.domain):
     mat_index = mat_c.find_position(nn.position,mat)
@@ -33,7 +56,7 @@ def sample_free_flight(nn=phy.particle, mat=geo.domain):
         mm = mat_index+1+len(mat.materials)
     bm = np.zeros(mm)
     rr = np.zeros(mm)
-    if dir > 0:
+    if dir >= 0:
         for ii in range(mm):
             if ii == 0:
                 ss = geo_c.distance_to_surface(nn,mat.materialposition[ii+mat_index][1],dir)
@@ -45,15 +68,15 @@ def sample_free_flight(nn=phy.particle, mat=geo.domain):
     else:
         for ii in range(mat_index,-1,-1):
             if ii == mat_index:
-                ss = np.max([0,geo_c.distance_to_surface(nn,mat.materialposition[ii][0],dir)])
+                ss = geo_c.distance_to_surface(nn,mat.materialposition[ii][0],dir)
             else:
-                ss = np.max([0,geo_c.distance_to_surface(nn,mat.materialposition[ii][1],dir)])
+                ss = geo_c.distance_to_surface(nn,mat.materialposition[ii][1],dir)
             rr[mat_index-ii] += ss-(rr[mat_index-ii-1] if ii<mat_index else 0)
         for ii in range(len(mat.materials)):
             if ii == 0:
-                ss = np.max([0,geo_c.distance_to_surface(nn,mat.materialposition[ii][1],-dir)])
+                ss = geo_c.distance_to_surface(nn,mat.materialposition[ii][1],dir)
             else:
-                ss = np.max([0,geo_c.distance_to_surface(nn,mat.materialposition[ii][0],-dir)])
+                ss = geo_c.distance_to_surface(nn,mat.materialposition[ii][0],dir)
             rr[mat_index+ii+1] += ss-rr[mat_index+ii]
         for ii in range(mat_index,-1,-1):
             bm[ii] = np.sum([mat.materials[ii-jj].macro_xs_total(nn.energy)*rr[jj] for jj in range(ii+1)])
@@ -103,7 +126,7 @@ def sample_energy_stepf(nn=phy.particle,mat=geo.domain):
         new_energy = stat.rejection(ff,ee)
     return new_energy
 
-def new_weight(nn=phy.particle, mat=geo.domain):
+def implicit_capture(nn=phy.particle, mat=geo.domain):
     mat_index = mat_c.find_position(nn.position,mat)
     is_index = mat_c.sample_isotope_index(nn,mat)
     new_weight = nn.weight*mat.materials[mat_index].composition[is_index].macro_xs_scattering(nn.energy)/mat.materials[mat_index].composition[is_index].macro_xs_total(nn.energy)
@@ -123,18 +146,17 @@ def new_weight(nn=phy.particle, mat=geo.domain):
         new_weight *= 1/(1-alfa)/mat.materials[mat_index].composition[is_index].macro_xs_scattering(nn.energy)*SS
     return new_weight
 
-def add_fissionsite(pp=geo.point,isotope=int,nn=float,ss=phy.source):
+def add_fissionsite(pp=geo.point,isot=tuple,nn=float,ss=phy.source):
         if len(GV.LL) > 1:
             space_index = mat_c.find_energy_index(pp.distance,ss.spacerange)-1
         else:
             space_index = 0
-        ss.spacedistribution[space_index].append([pp,isotope])
         rho = rnd.rand()
         N = int(nn)
         if rho < nn-N:
-            ss.n_generated[space_index].append(N+1)
-        else:
-            ss.n_generated[space_index].append(N)
+            N+=1
+        out = phy.fission_site(N,pp,isot)
+        ss.spacedistribution[space_index].append(out)
 
 def implicit_fission(nn=phy.particle,mat=geo.domain,ss=phy.source,KK=float):
     mat_index = mat_c.find_position(nn.position,mat)
@@ -152,5 +174,6 @@ def implicit_fission(nn=phy.particle,mat=geo.domain,ss=phy.source,KK=float):
             nu = chi/SigmaF*SS
         kn = nn.weight*(nu*SigmaF)/SigmaT
         RR = kn/KK
-        add_fissionsite(nn.position,is_index,RR,ss)
+        add_fissionsite(nn.position,(mat_index,is_index),RR,ss)
+        #nn.weight *= (1+nu*SigmaF/SigmaT)
     return kn/GV.Nstories

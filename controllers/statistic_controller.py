@@ -37,7 +37,7 @@ def normalization(tt=stat.tally):
         for ii in range(len(tt.mean)):
             for jj in range(len(tt.mean[ii])):
                 if GV.GEOMETRY_TYPE == 'sphere':
-                    tt.mean[ii][jj] *= 1/(4/3*pi*(tt.spacerange[jj+1]**2-tt.spacerange[jj]**2))
+                    tt.mean[ii][jj] *= 1/(4/3*pi*(tt.spacerange[jj+1]**3-tt.spacerange[jj]**3))
                 else:
                     tt.mean[ii][jj] *= 1/(tt.spacerange[jj+1]-tt.spacerange[jj])
 

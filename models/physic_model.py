@@ -22,38 +22,31 @@ class particle:
         self.weight = ww
         self.eof = 1
 
+class fission_site:
+    def __init__(self,num=int,pos=geo.point,index=tuple):
+        self.position = pos
+        self.mat_i = index[0]
+        self.iso_i = index[1]
+        self.nn = num
+
+
 class source:
-    def __init__(self,nGen=int,space_lim=tuple,space_n=int,initial_dist=list,intensity=float,type=str,pdf=None,range=None,pdf_log=None):
-        self.intensity = intensity
+    def __init__(self,nGen=int,space_lim=tuple,space_n=int,type=str,pdf=None,xx=None,pdf_log=None):
         self.type = type
-        self.shannonentropy = []
         if pdf != None:
             self.energydistribution = pdf
             if pdf_log == True:
-                self.energyrange = np.logspace(np.log10(range[0]),np.log10(range[1]),len(pdf))
+                self.energyrange = np.logspace(np.log10(xx[0]),np.log10(xx[1]),len(pdf))
             else:
-                self.energyrange = np.linspace(range[0],range[1],len(pdf))
+                self.energyrange = np.linspace(xx[0],xx[1],len(pdf))
         if len(space_lim)>1:
             self.spacerange = np.linspace(space_lim[0],space_lim[1],space_n)
             self.spaceref = (self.spacerange[:-1] + self.spacerange[1:]) / 2
             self.spacedistribution = [[] for _ in range(len(self.spaceref))]
-            self.n_generated = [[] for _ in range(len(self.spaceref))]
         else:
             self.spacerange = np.array([float('inf')])
             self.spaceref = np.array([0])
             self.spacedistribution = []
-            self.n_generated = []
-        for ii in range(len(initial_dist)):
-            self.spacedistribution[ii].append(geo.point(initial_dist[ii]))
-            self.n_generated[ii].append(int(nGen/len(initial_dist)))
-
-    def get_position(self):
-        rho = random.randrange(len(self.spacedistribution))
-        if len(self.spacerange)>1:
-            out = self.spacedistribution[rho]
-        else:
-            out = geo.point((0,0,0))
-        return out
 
     def get_energy(self,mat=mat.isotope):
         if self.type == 'watt':
@@ -73,24 +66,28 @@ class source:
     
     @property
     def tot_generated(self):
-        return sum(np.array(self.n_generated))
+        tot = 0
+        for ii in range(len(self.spacedistribution)):
+            for jj in self.spacedistribution[ii]:
+                tot += jj.nn
+        return tot
     
+    @property
     def s_entropy(self):
         HH = 0
-        for ii in self.n_generated:
-            pp = sum(ii)/self.tot_generated
-            if pp > 0:
-                HH += -pp*np.log2(pp)
-        self.shannonentropy.append(HH)
+        for ii in range(len(self.spacedistribution)):
+            pp = 0
+            for jj in self.spacedistribution[ii]:
+                pp += jj.nn/GV.Nstories
+            HH += -pp*np.log2(pp) if pp > 0 else 0
+        return HH
         
     def reset_source(self):
         self.spacedistribution = [[] for _ in range(len(self.spaceref))]
-        self.n_generated = [[] for _ in range(len(self.spaceref))]
+
 
 def watt_distribution(eout, aa=0.988, bb=2.249):
     xx = eout/1E6
-    #AA = ((np.sqrt((pi*bb)/(4*aa)))*(np.exp(bb/(4*aa))))/aa
-    #out = AA*(np.exp(-aa*xx))*np.sinh(np.sqrt(bb*xx))
     out = 0.4527*(np.exp(-xx/0.965))*np.sinh(np.sqrt(2.29*xx))
     return out
 
