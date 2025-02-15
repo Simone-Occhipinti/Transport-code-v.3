@@ -124,12 +124,10 @@ def sample_energy_stepf(nn=phy.particle,mat=geo.domain):
         up_i = mat_c.find_energy_index(nn.energy/alfa,mat.materials[mat_index].composition[is_index].energy)
         if low_i == up_i:
             sigma = np.array([mat.materials[mat_index].composition[is_index].micro_xs_scattering[up_i-1],mat.materials[mat_index].composition[is_index].micro_xs_scattering[up_i]])*mat.materials[mat_index].composition[is_index].atomic_density
-            #sigma *= mat.materials[mat_index].composition[is_index].atomic_density
             ee = np.array([mat.materials[mat_index].energy[low_i-1],mat.materials[mat_index].energy[low_i]])
         else:
             ee = mat.materials[mat_index].composition[is_index].energy[low_i-1:up_i]
             sigma = mat.materials[mat_index].composition[is_index].micro_xs_scattering[low_i-1:up_i]*mat.materials[mat_index].composition[is_index].atomic_density
-            #sigma *= mat.materials[mat_index].composition[is_index].atomic_density
         SS = np.trapz(sigma/ee,ee)
         ff = lambda eout: (mat.materials[mat_index].macro_xs_scattering(eout) / SS / eout) if not np.isclose(eout, 0) else 0
         new_energy = stat.rejection(ff,ee)
