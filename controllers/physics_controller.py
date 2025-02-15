@@ -21,7 +21,7 @@ def generate_new_particle(ss=phy.source,ww=float,mat=mat.isotope,pp=None):
     return out
 
 def initialize_population(ss=phy.source,PS=list,mat=geo.domain):
-    if all(len(sublist) == 0 for sublist in ss.spacedistribution) or GV.simulation_type=='placzek':
+    if all(len(sublist) == 0 for sublist in ss.spacedistribution):
         for _ in range(int(GV.Nstories)):
             if len(mat.materials)>1:
                 mat_index = rnd.randint(0,len(mat.materials)-1)
@@ -104,6 +104,15 @@ def sample_free_flight(nn=phy.particle, mat=geo.domain):
         add_z = new_rr * np.cos(-nn.direction.teta)
     return geo_c.sumpos(nn.position,geo.point((add_x,add_y,add_z)))
 
+def alternative_free_flight(nn=phy.particle,mat=geo.domain):
+    mat_index = mat_c.find_position(nn.position,mat)
+    rho = rnd.rand()
+    rr = -np.log(rho)/mat.materials[mat_index].macro_xs_total(nn.energy)
+    add_x = rr * np.sin(nn.direction.teta) * np.cos(nn.direction.phi)
+    add_y = rr * np.sin(nn.direction.teta) * np.sin(nn.direction.phi)
+    add_z = rr * np.cos(nn.direction.teta)
+    return geo_c.sumpos(nn.position,geo.point((add_x,add_y,add_z)))
+
 def sample_energy_stepf(nn=phy.particle,mat=geo.domain):
     mat_index = mat_c.find_position(nn.position,mat)
     is_index = mat_c.sample_isotope_index(nn,mat)
@@ -114,13 +123,13 @@ def sample_energy_stepf(nn=phy.particle,mat=geo.domain):
         low_i = mat_c.find_energy_index(nn.energy,mat.materials[mat_index].composition[is_index].energy)
         up_i = mat_c.find_energy_index(nn.energy/alfa,mat.materials[mat_index].composition[is_index].energy)
         if low_i == up_i:
-            sigma = np.array([mat.materials[mat_index].composition[is_index].micro_xs_scattering[up_i-1],mat.materials[mat_index].composition[is_index].micro_xs_scattering[up_i]])
-            sigma *= mat.materials[mat_index].composition[is_index].atomic_density
+            sigma = np.array([mat.materials[mat_index].composition[is_index].micro_xs_scattering[up_i-1],mat.materials[mat_index].composition[is_index].micro_xs_scattering[up_i]])*mat.materials[mat_index].composition[is_index].atomic_density
+            #sigma *= mat.materials[mat_index].composition[is_index].atomic_density
             ee = np.array([mat.materials[mat_index].energy[low_i-1],mat.materials[mat_index].energy[low_i]])
         else:
-            ee = mat.materials[mat_index].composition[is_index].energy[low_i-1:up_i+1]
-            sigma = mat.materials[mat_index].composition[is_index].micro_xs_scattering[low_i-1:up_i+1]
-            sigma *= mat.materials[mat_index].composition[is_index].atomic_density
+            ee = mat.materials[mat_index].composition[is_index].energy[low_i-1:up_i]
+            sigma = mat.materials[mat_index].composition[is_index].micro_xs_scattering[low_i-1:up_i]*mat.materials[mat_index].composition[is_index].atomic_density
+            #sigma *= mat.materials[mat_index].composition[is_index].atomic_density
         SS = np.trapz(sigma/ee,ee)
         ff = lambda eout: (mat.materials[mat_index].macro_xs_scattering(eout) / SS / eout) if not np.isclose(eout, 0) else 0
         new_energy = stat.rejection(ff,ee)
@@ -135,13 +144,11 @@ def implicit_capture(nn=phy.particle, mat=geo.domain):
         low_i = mat_c.find_energy_index(nn.energy,mat.materials[mat_index].composition[is_index].energy)
         up_i = mat_c.find_energy_index(nn.energy/alfa,mat.materials[mat_index].composition[is_index].energy)
         if low_i == up_i:
-            sigma = np.array([mat.materials[mat_index].composition[is_index].micro_xs_scattering[up_i-1],mat.materials[mat_index].composition[is_index].micro_xs_scattering[up_i]])
-            sigma *= mat.materials[mat_index].composition[is_index].atomic_density
+            sigma = np.array([mat.materials[mat_index].composition[is_index].micro_xs_scattering[up_i-1],mat.materials[mat_index].composition[is_index].micro_xs_scattering[up_i]])**mat.materials[mat_index].composition[is_index].atomic_density
             ee = np.array([mat.materials[mat_index].energy[low_i-1],mat.materials[mat_index].energy[low_i]])
         else:
-            ee = mat.materials[mat_index].composition[is_index].energy[low_i-1:up_i+1]
-            sigma = mat.materials[mat_index].composition[is_index].micro_xs_scattering[low_i-1:up_i+1]
-            sigma *= mat.materials[mat_index].composition[is_index].atomic_density
+            ee = mat.materials[mat_index].composition[is_index].energy[low_i-1:up_i]
+            sigma = mat.materials[mat_index].composition[is_index].micro_xs_scattering[low_i-1:up_i]*mat.materials[mat_index].composition[is_index].atomic_density
         SS = np.trapz(sigma/ee,ee)
         new_weight *= 1/(1-alfa)/mat.materials[mat_index].composition[is_index].macro_xs_scattering(nn.energy)*SS
     return new_weight

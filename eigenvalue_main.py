@@ -1,6 +1,6 @@
 # eigenvalue
 
-import sys
+#import sys
 
 import numpy as np
 import numpy.random as rnd
@@ -84,5 +84,6 @@ plt.plot(KK,label='kk')
 plt.plot(HH,label='se')
 plt.grid()
 plt.legend()
-output_file = sys.argv[1]
+#output_file = sys.argv[1]
+output_file = "output.png"
 plt.savefig(output_file, dpi=300, bbox_inches='tight')
