@@ -55,7 +55,7 @@ class source:
             else:
                 SS = np.trapz(mat.nu*mat.micro_xs_fission*mat.atomic_density,mat.energy)
                 ff = lambda eout: mat.nu_avg(eout)*mat.macro_xs_fission(eout)/SS
-                out = stat.rejection(ff,mat.energy)
+                out = stat.rejection(ff,mat.energy,log=True)
         elif self.type == 'fixed':
             out = GV.EREF
         if out > GV.EMAX:

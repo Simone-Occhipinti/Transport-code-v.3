@@ -178,7 +178,8 @@ def implicit_fission(nn=phy.particle,mat=geo.domain,ss=phy.source,KK=float):
             chi = phy.watt_distribution(nn.energy)
             nu = chi/SigmaF*SS
         kn = nn.weight*(nu*SigmaF)/SigmaT
-        RR = kn/KK
+        #RR = kn/KK
+        RR = kn
         add_fissionsite(nn.position,(mat_index,is_index),RR,ss)
         #nn.weight *= (1+nu*SigmaF/SigmaT)
     return kn/GV.Nstories
