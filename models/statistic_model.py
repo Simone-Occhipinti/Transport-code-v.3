@@ -55,8 +55,8 @@ def rejection(ff, vett=np.array,log=False):
     while out == 0:
         if log == True:
             ics = 10 ** (np.log10(vett[0]) + (np.log10(vett[-1]) - np.log10(vett[0]))*rnd.rand())
-            ips = ff(ics)/GV.MM*ics*(np.log(vett[-1])-np.log(vett[0]))
-            if rnd.rand() >= ips:
+            ips = (ff(ics)/GV.MM)*ics*(np.log(vett[-1])-np.log(vett[0]))
+            if rnd.rand() <= ips:
                 out = ics
         else:
             ics = vett[0] + (vett[-1]-vett[0])*rnd.rand()

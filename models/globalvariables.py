@@ -7,8 +7,8 @@ import numpy as np
 
 #PARTICLE_TYPE = 'neutron'
 PARTICLE_TYPE = 'adjunction'
-GEOMETRY_TYPE = 'sphere'
-#GEOMETRY_TYPE = 'slab'
+#GEOMETRY_TYPE = 'sphere'
+GEOMETRY_TYPE = 'slab'
 #EREF = 1E1
 EREF = 2E6
 EMIN = 1E-5
@@ -24,14 +24,14 @@ LEnd = 8.7407  #cm
 #LL = (0.,)
 Wmin = 0.25
 Wmax = 2
-Groups = np.logspace(np.log10(EMIN),np.log10(EMAX),int(100))
+#Groups = np.logspace(np.log10(EMIN),np.log10(EMAX),int(100))
 
 # only for eigenvalue calculationd
 simulation_type = 'eigenvalue'
 #simulation_type = 'placzek'
-Nskip = 1E2
-Nactive = 1E2
+Nskip = 2E2
+Nactive = 100
 Kin = 1.
-#Groups = [EMIN, 6.25E-1,5.53E3,8.21E5,1E6,EMAX]
+Groups = [EMIN, 6.25E-1,5.53E3,8.21E5,1E6,EMAX]
 LL = (L0,LEnd)
 MM = 55

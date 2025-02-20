@@ -20,7 +20,7 @@ def generate_new_particle(ss=phy.source,ww=float,mat=mat.isotope,pp=None):
     out = phy.particle(rr,new_dir,new_energy,ww)
     return out
 
-def initialize_population(ss=phy.source,PS=list,mat=geo.domain):
+def initialize_population(ss=phy.source,PS=list,mat=geo.domain,kk=None):
     if all(len(sublist) == 0 for sublist in ss.spacedistribution):
         for _ in range(int(GV.Nstories)):
             if len(mat.materials)>1:
@@ -34,6 +34,7 @@ def initialize_population(ss=phy.source,PS=list,mat=geo.domain):
             PS.append(generate_new_particle(ss,1.,mat.materials[mat_index].composition[is_index]))
     else:
         ww = GV.Nstories/ss.tot_generated
+        #ww = kk if kk != None else 1.
         for ii in range(len(ss.spacedistribution)):
             if len(ss.spacedistribution[ii])>0:
                 for jj in ss.spacedistribution[ii]:
@@ -178,8 +179,8 @@ def implicit_fission(nn=phy.particle,mat=geo.domain,ss=phy.source,KK=float):
             chi = phy.watt_distribution(nn.energy)
             nu = chi/SigmaF*SS
         kn = nn.weight*(nu*SigmaF)/SigmaT
-        #RR = kn/KK
-        RR = kn
+        RR = kn/KK
+        #RR = kn
         add_fissionsite(nn.position,(mat_index,is_index),RR,ss)
         #nn.weight *= (1+nu*SigmaF/SigmaT)
     return kn/GV.Nstories
