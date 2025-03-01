@@ -16,8 +16,10 @@ def count_interaction(tt=stat.tally, pp=phy.particle, mat=geo.domain):
         spaceindex = 0
     energyindex = np.where(pp.energy <= tt.energyrange)[0][0]-1
     mat_index = mat_c.find_position(pp.position,mat)
-    xx = pp.weight/mat.materials[mat_index].macro_xs_total(pp.energy)
-    #xx = pp.weight
+    if GV.simulation_type == 'placzek':
+        xx = pp.weight
+    else:
+        xx = pp.weight/mat.materials[mat_index].macro_xs_total(pp.energy)
     tt.counter[energyindex][spaceindex] += xx
 
 def wellford(tt=stat.tally):

@@ -62,8 +62,8 @@ def sample_free_flight(nn=phy.particle, mat=geo.domain):
             if ii == 0:
                 ss = geo_c.distance_to_surface(nn,mat.materialposition[ii+mat_index][1],dir)
             else:
-                ss = geo_c.distance_to_surface(nn,mat.materialposition[ii+mat_index][0],dir)
-            rr[ii] += ss-(rr[ii-1] if ii>0 else 0)
+                ss = geo_c.distance_to_surface(nn,mat.materialposition[ii+mat_index][1],dir)
+            rr[ii] += ss-(sum(rr[:ii]) if ii>0 else 0)
         for ii in range(mm):
             bm[ii] = np.sum([mat.materials[mat_index + jj].macro_xs_total(nn.energy) * rr[jj] for jj in range(ii + 1)])
     else:
@@ -71,18 +71,22 @@ def sample_free_flight(nn=phy.particle, mat=geo.domain):
             if ii == mat_index:
                 ss = geo_c.distance_to_surface(nn,mat.materialposition[ii][0],dir)
             else:
-                ss = geo_c.distance_to_surface(nn,mat.materialposition[ii][1],dir)
-            rr[mat_index-ii] += ss-(rr[mat_index-ii-1] if ii<mat_index else 0)
+                ss = geo_c.distance_to_surface(nn,mat.materialposition[ii][0],dir)
+            rr[mat_index-ii] += ss-(sum(rr[:mat_index-ii]) if ii<mat_index else 0)
         for ii in range(len(mat.materials)):
             if ii == 0:
                 ss = geo_c.distance_to_surface(nn,mat.materialposition[ii][1],dir)
             else:
-                ss = geo_c.distance_to_surface(nn,mat.materialposition[ii][0],dir)
-            rr[mat_index+ii+1] += ss-rr[mat_index+ii]
-        for ii in range(mat_index,-1,-1):
-            bm[ii] = np.sum([mat.materials[ii-jj].macro_xs_total(nn.energy)*rr[jj] for jj in range(ii+1)])
+                ss = geo_c.distance_to_surface(nn,mat.materialposition[ii][1],dir)
+            rr[mat_index+ii+1] += ss-sum(rr[:mat_index+ii+1])
+        # for ii in range(mat_index,-1,-1):
+        #     bm[ii] = np.sum([mat.materials[ii-jj].macro_xs_total(nn.energy)*rr[jj] for jj in range(ii+1)])
+        # for ii in range(len(mat.materials)):
+        #     bm[mat_index+ii+1] = np.sum([mat.materials[jj].macro_xs_total(nn.energy)*rr[mat_index+jj] for jj in range(ii+1)])
+        for ii in range(mat_index+1):
+            bm[ii] = np.sum([mat.materials[mat_index-jj].macro_xs_total(nn.energy)*rr[jj] for jj in range(ii+1)])
         for ii in range(len(mat.materials)):
-            bm[mat_index+ii+1] = np.sum([mat.materials[jj].macro_xs_total(nn.energy)*rr[mat_index+jj] for jj in range(ii+1)])
+            bm[mat_index+ii+1] = np.sum([mat.materials[jj].macro_xs_total(nn.energy)*rr[mat_index+jj+1] for jj in range(ii+1)])
     rho = rnd.rand()
     eta = -np.log(rho)
     for region in range(1,mm+1):
