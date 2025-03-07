@@ -40,7 +40,8 @@ def initialize_population(ss=phy.source,PS=list,mat=geo.domain,kk=None):
                 for jj in ss.spacedistribution[ii]:
                     for _ in range(jj.nn):
                         if ww <= GV.Wmin:
-                            rho = rnd.rand()
+                            #rho = rnd.rand()
+                            rho = GV.rnd_counter.number()
                             if rho <= ww:
                                 out = generate_new_particle(ss,1.,mat.materials[jj.mat_i].composition[jj.iso_i],jj.position)
                                 PS.append(out)
@@ -87,7 +88,8 @@ def sample_free_flight(nn=phy.particle, mat=geo.domain):
             bm[ii] = np.sum([mat.materials[mat_index-jj].macro_xs_total(nn.energy)*rr[jj] for jj in range(ii+1)])
         for ii in range(len(mat.materials)):
             bm[mat_index+ii+1] = np.sum([mat.materials[jj].macro_xs_total(nn.energy)*rr[mat_index+jj+1] for jj in range(ii+1)])
-    rho = rnd.rand()
+    #rho = rnd.rand()
+    rho = GV.rnd_counter.number()
     eta = -np.log(rho)
     for region in range(1,mm+1):
         b_minus1 = bm[region - 2] if region > 1 else 0
@@ -111,7 +113,8 @@ def sample_free_flight(nn=phy.particle, mat=geo.domain):
 
 def alternative_free_flight(nn=phy.particle,mat=geo.domain):
     mat_index = mat_c.find_position(nn.position,mat)
-    rho = rnd.rand()
+    #rho = rnd.rand()
+    rho = GV.rnd_counter.number()
     rr = -np.log(rho)/mat.materials[mat_index].macro_xs_total(nn.energy)
     add_x = rr * np.sin(nn.direction.teta) * np.cos(nn.direction.phi)
     add_y = rr * np.sin(nn.direction.teta) * np.sin(nn.direction.phi)
@@ -123,7 +126,8 @@ def sample_energy_stepf(nn=phy.particle,mat=geo.domain):
     is_index = mat_c.sample_isotope_index(nn,mat)
     alfa = mat.materials[mat_index].composition[is_index].alpha
     if GV.PARTICLE_TYPE == 'neutron':
-        new_energy = nn.energy*(alfa+(1-alfa)*rnd.rand())
+        #new_energy = nn.energy*(alfa+(1-alfa)*rnd.rand())
+        new_energy = nn.energy*(alfa+(1-alfa)*GV.rnd_counter.number())
     else:
         low_i = mat_c.find_energy_index(nn.energy,mat.materials[mat_index].composition[is_index].energy)
         up_i = mat_c.find_energy_index(nn.energy/alfa,mat.materials[mat_index].composition[is_index].energy)
@@ -161,7 +165,8 @@ def add_fissionsite(pp=geo.point,isot=tuple,nn=float,ss=phy.source):
             space_index = mat_c.find_energy_index(pp.distance,ss.spacerange)-1
         else:
             space_index = 0
-        rho = rnd.rand()
+        #rho = rnd.rand()
+        rho = GV.rnd_counter.number()
         N = int(nn)
         if rho < nn-N:
             N+=1

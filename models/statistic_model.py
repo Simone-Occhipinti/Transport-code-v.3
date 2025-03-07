@@ -45,6 +45,7 @@ class tally:
         aa = self.sigma_smavg
         return aa/self.mean
 
+
 def rejection(ff, vett=np.array,log=False):
     yy = []
     for ii in vett:
@@ -56,16 +57,18 @@ def rejection(ff, vett=np.array,log=False):
         if log == True:
             ics = 10 ** (np.log10(vett[0]) + (np.log10(vett[-1]) - np.log10(vett[0]))*rnd.rand())
             ips = (ff(ics)/GV.MM)*ics*(np.log(vett[-1])-np.log(vett[0]))
-            if rnd.rand() <= ips:
+            #rho = rnd.rand()
+            rho = GV.rnd_counter.number()
+            if rho <= ips:
                 out = ics
         else:
             ics = vett[0] + (vett[-1]-vett[0])*rnd.rand()
-            ips = MM*rnd.rand()
+            #ips = MM*rnd.rand()
+            ips = MM*GV.rnd_counter.number()
             if ips <= ff(ics):
                 out = ics
     return out
 
-        
-        
+
         
 

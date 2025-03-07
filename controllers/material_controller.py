@@ -35,7 +35,8 @@ def sample_isotope_index(pp=phy.particle,mat=geo.domain):
     for ii in range(nn):
         XS[ii] += mat.materials[mat_index].composition[ii].macro_xs_total(pp.energy)/mat.materials[mat_index].macro_xs_total(pp.energy)
     cumXS = np.cumsum(XS)
-    rho = rnd.rand()
+    #rho = rnd.rand()
+    rho = GV.rnd_counter.number()
     out = np.where(cumXS>rho)[0][0]
     return out
 
@@ -46,7 +47,8 @@ def sample_fission_isotope(pp=phy.particle,mat=mat.material):
         for ii in range(nn):
             XS[ii] += mat.composition[ii].macro_xs_fission(pp.energy)/mat.macro_xs_fission(pp.energy)
         cumXS = np.cumsum(XS)
-        rho = rnd.rand()
+        #rho = rnd.rand()
+        rho = GV.rnd_counter.number()
         out = np.where(cumXS>rho)[0][0]
     else:
         out = None

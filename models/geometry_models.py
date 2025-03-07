@@ -28,8 +28,10 @@ class direction:
         self.phi = PHI
         
     def get_rnd_direction():
-        phi = 2*pi*rnd.rand()
-        teta = np.arccos(2*rnd.rand()-1)
+        #phi = 2*pi*rnd.rand()
+        phi = 2*pi*GV.rnd_counter.number()
+        #teta = np.arccos(2*rnd.rand()-1)
+        teta = np.arccos(2*GV.rnd_counter.number()-1)
         return direction(phi,teta,False)
     
 class domain:

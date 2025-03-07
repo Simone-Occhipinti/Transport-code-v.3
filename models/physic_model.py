@@ -97,8 +97,10 @@ def watt(aa=0.988, bb=2.249):
         MM = aa*LL-1
         out = 0
         while out<=0:
-            xx = -np.log(rnd.rand())
-            yy = -np.log(rnd.rand())
+            #xx = -np.log(rnd.rand())
+            xx = -np.log(GV.rnd_counter.number())
+            #yy = -np.log(rnd.rand())
+            yy = -np.log(GV.rnd_counter.number())
             if ((yy-MM*(xx+1))**2)<=bb*LL*xx:
                 out += LL*xx
         return out*1E6

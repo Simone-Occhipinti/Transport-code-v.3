@@ -5,7 +5,6 @@ import models.globalvariables as GV
 import models.statistic_model as stat
 import models.physic_model as phy
 import models.geometry_models as geo
-import controllers.physics_controller as phy_c
 import controllers.material_controller as mat_c
 import numpy.random as rnd
 
@@ -45,7 +44,8 @@ def normalization(tt=stat.tally):
 
 def russian_roulette(pp=phy.particle):
     if pp.weight <= GV.Wmin:
-        rho = rnd.rand()
+        #rho = rnd.rand()
+        rho = GV.rnd_counter.number()
         if rho <= pp.weight:
             pp.weight = 1
         else:
@@ -61,7 +61,9 @@ def splitting(pp=phy.particle,PS = list):
             pp.weight *= 1/N
         else:
             D = N - int(N)
-            if rnd.rand() <= 1-D:
+            #rho = rnd.rand()
+            rho = GV.rnd_counter.number()
+            if rho <= 1-D:
                 for _ in range(int(N)-1):
                     PS.append(phy.particle(pp.position,pp.direction,pp.energy,pp.weight/int(N)))
                 pp.weight *= 1/int(N)
